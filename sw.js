@@ -1,8 +1,9 @@
-// İnternet olmadan da açılsın diye dosyaları saklar. Yeni sürümde CACHE adını değiştir.
-var CACHE = "soru-takibi-2.1";
-var FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
+// İnternet olmadan da açılsın diye dosyaları saklar. Her açılışta önce internetten yeni sürüm denenir,
+// böylece GitHub'a konan yeni sürüm kendiliğinden gelir. Yeni sürümde CACHE adını değiştir.
+var CACHE = "soru-takibi-2.15";
+var FILES = ["./", "index.html", "app.js", "cekirdek.js", "rapor.js", "veri.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }));
+  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES.map(function (f) { return new Request(f, {cache: "reload"}); })); }));
   self.skipWaiting();
 });
 self.addEventListener("activate", function (e) {
@@ -11,10 +12,11 @@ self.addEventListener("activate", function (e) {
   }));
   self.clients.claim();
 });
-// Önce internetten dene (güncelleme gelsin), olmazsa saklanandan aç.
 self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET") return;
-  e.respondWith(fetch(e.request).then(function (r) {
+  var u = new URL(e.request.url);
+  if (u.origin !== self.location.origin) return; // canlı paylaşım (Google) isteklerine karışma
+  e.respondWith(fetch(e.request, {cache: "no-cache"}).then(function (r) {
     var copy = r.clone();
     caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
     return r;
