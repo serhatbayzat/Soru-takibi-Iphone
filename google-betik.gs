@@ -1,55 +1,32 @@
-/**
- * Soru Takibi · canlı paylaşım betiği (Google Apps Script)
- *
- * Öğrencinin telefonu verisini buraya gönderir, velinin telefonu buradan okur.
- * Veri, bu betiğin bağlı olduğu Google E-Tablo'da durur (sadece sizin Google hesabınızda).
- *
- * KURULUM (bir kez):
- *  1. Google Drive'da yeni bir E-Tablo açın (adı ör. "Soru Takibi veri").
- *  2. Menü: Uzantılar → Apps Script. Açılan sayfadaki her şeyi silip bu dosyanın tamamını yapıştırın, kaydedin.
- *  3. Sağ üstte Dağıt → Yeni dağıtım → (dişli) Web uygulaması.
- *       Şu kullanıcı olarak çalıştır: Ben
- *       Erişimi olanlar: Herkes
- *     Dağıt → izin isteğinde hesabınızı seçip "İzin ver" (gerekirse Gelişmiş → ... projesine git).
- *  4. Çıkan "Web uygulaması" adresini (…/exec ile biter) kopyalayın.
- *     Bu adres "bağlantı adresi"dir: öğrencinin ve velilerin uygulamasında Ayarlar → Canlı paylaşım'a yapıştırılır.
- *     Adresi sadece aile içinde paylaşın; adresi bilen veriyi görebilir.
- */
-
-var PARCA = 45000;        // bir hücreye yazılan en çok karakter
-var GUNLUK_SAKLA = 30;    // kaç günlük kopya saklansın (yanlışlıkla silmeye karşı)
+// Soru Takibi canlı paylaşım betiği. Kurulum: KURULUM.md
+var PARCA = 45000, GUNLUK_SAKLA = 30;
 
 function doGet(e) {
   var s = sayfa_('veri');
-  var zaman = Number(s.getRange(1, 1).getValue()) || 0;
-  var veri = oku_(s, 1);
-  return json_({ok: true, zaman: zaman, veri: veri});
+  return json_({ok: true, zaman: Number(s.getRange(1, 1).getValue()) || 0, veri: oku_(s)});
 }
 
 function doPost(e) {
   var kilit = LockService.getScriptLock();
   kilit.waitLock(20000);
   try {
-    var metin = e && e.postData ? e.postData.contents : '';
-    var o = JSON.parse(metin);                    // {veri: "<yedek metni>", cihaz: "..."}
+    var o = JSON.parse(e.postData.contents);
     var veri = String(o.veri || '');
     if (veri.indexOf('"gunler"') < 0) return json_({ok: false, hata: 'gecersiz'});
     var simdi = Date.now();
     var s = sayfa_('veri');
     s.clear();
-    yaz_(s, 1, simdi, veri);
+    s.getRange(1, 1).setValue(simdi);
     s.getRange(1, 2).setValue(o.cihaz || '');
-    // günün son hali ayrı sayfada (en çok GUNLUK_SAKLA gün)
+    var p = bol_(veri);
+    s.getRange(2, 1, p.length, 1).setValues(p.map(function (x) { return [x]; }));
     var g = sayfa_('gunluk');
-    var bugun = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-    var son = g.getLastRow();
-    var satir = son + 1;
-    if (son > 0 && g.getRange(son, 1).getValue() === '~' + bugun) satir = son;
-    g.getRange(satir, 1, 1, Math.max(g.getMaxColumns(), 2)).clearContent();
-    g.getRange(satir, 1).setValue('~' + bugun);
-    var parcalar = bol_(veri);
-    if (g.getMaxColumns() < parcalar.length + 1) g.insertColumnsAfter(g.getMaxColumns(), parcalar.length + 1 - g.getMaxColumns());
-    g.getRange(satir, 2, 1, parcalar.length).setValues([parcalar]);
+    var bugun = '~' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    var son = g.getLastRow(), satir = son + 1;
+    if (son > 0 && g.getRange(son, 1).getValue() === bugun) satir = son;
+    if (g.getMaxColumns() < p.length + 1) g.insertColumnsAfter(g.getMaxColumns(), p.length + 1 - g.getMaxColumns());
+    g.getRange(satir, 1, 1, g.getMaxColumns()).clearContent();
+    g.getRange(satir, 1, 1, p.length + 1).setValues([[bugun].concat(p)]);
     if (g.getLastRow() > GUNLUK_SAKLA) g.deleteRows(1, g.getLastRow() - GUNLUK_SAKLA);
     return json_({ok: true, zaman: simdi});
   } catch (err) {
@@ -59,33 +36,38 @@ function doPost(e) {
   }
 }
 
-function sayfa_(ad) {
+// Betik bir E-Tablo'ya bağlı değilse kendi tablosunu açar ("Soru Takibi Veri (betik)").
+function tablo_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (ss) return ss;
+  var pr = PropertiesService.getScriptProperties(), id = pr.getProperty('tablo');
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (x) {} }
+  ss = SpreadsheetApp.create('Soru Takibi Veri (betik)');
+  pr.setProperty('tablo', ss.getId());
+  return ss;
+}
+
+function sayfa_(ad) {
+  var ss = tablo_();
   return ss.getSheetByName(ad) || ss.insertSheet(ad);
 }
 
+// Her parçanın başına "~": hücre formül ya da sayı sanılmasın.
 function bol_(veri) {
   var out = [];
-  // her parçanın başına "~" konur: hücre "=" ile başlayıp formül sanılmasın, sayıya çevrilmesin
   for (var i = 0; i < veri.length; i += PARCA) out.push('~' + veri.substring(i, i + PARCA));
-  if (!out.length) out.push('~');
-  return out;
+  return out.length ? out : ['~'];
 }
 
-/** 1. sütun: 1. satır zaman, 2. satırdan itibaren metin parçaları. */
-function yaz_(s, sutun, zaman, veri) {
-  var p = bol_(veri);
-  s.getRange(1, sutun).setValue(zaman);
-  var v = p.map(function (x) { return [x]; });
-  s.getRange(2, sutun, v.length, 1).setValues(v);
-}
-
-function oku_(s, sutun) {
+function oku_(s) {
   var n = s.getLastRow();
   if (n < 2) return '';
-  return s.getRange(2, sutun, n - 1, 1).getValues().map(function (r) { return String(r[0]).substring(1); }).join('');
+  return s.getRange(2, 1, n - 1, 1).getValues().map(function (r) { return String(r[0]).substring(1); }).join('');
 }
 
 function json_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
+
+// Kurulumda bir kez "Çalıştır" ile izin vermek için.
+function kurulum() { sayfa_('veri'); }
