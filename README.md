@@ -14,3 +14,13 @@ canlı paylaşım).
 Geliştirici notu: `veri.js` Android kaynağından `tools/web_veri.py` ile üretilir; `cekirdek.js` Android'deki
 Store/Kaynaklar/Konular/Tekrar/Degerlendirme sınıflarının birebir karşılığıdır. Güncellemede `sw.js` içindeki
 `CACHE` adı değiştirilir.
+
+---
+
+## Deyim Ustası (`deyim/` klasörü)
+
+6. sınıf Türkçe deyim çalışma uygulamasının iPhone sürümü (Android'deki Deyim Ustası'nın karşılığı):
+200 deyim, konu konu kartlar, aralıklı tekrar, sınav tipi testler, yanlışlar ve ilerleme.
+
+**Kullanım:** Bu sitenin adresinin sonuna `deyim/` ekleyip Safari'de açın → Paylaş → **Ana Ekrana Ekle**.
+İlerleme o telefonda saklanır. Güncellemede `deyim/sw.js` içindeki `CACHE` adı değiştirilir.

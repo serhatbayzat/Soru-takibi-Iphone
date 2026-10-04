@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deyim Ustası</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Deyim Ustası">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#6A4BC4">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="ikon-180.png">
+<style>
+:root{--bg:#F4F2FB;--paper:#fff;--ink:#231B45;--muted:#6B6488;--line:#E1DCF2;--main:#6A4BC4;--main-soft:#EDE7FB;
+--ok:#1F9255;--ok-soft:#E3F5EA;--bad:#D0453F;--bad-soft:#FBE7E6;--gold:#C98A0F;--gold-soft:#FDF3DA;--blue:#2F6FD6;--blue-soft:#E3ECFB}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--main);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;display:flex;align-items:center;gap:10px}
+header h1{font-size:20px;margin:0;flex:1}
+header button{background:none;border:0;color:#fff;font-size:24px;padding:4px 10px 4px 0;cursor:pointer}
+main{padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 32px);max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.kart{background:var(--paper);border:1.5px solid var(--line);border-radius:18px;padding:16px}
+.etiket{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.buyuk{font-size:24px;font-weight:700}
+.soluk{color:var(--muted);font-size:14px}
+.cubuk{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:8px}
+.cubuk>i{display:block;height:100%;background:var(--ok);border-radius:4px}
+.uclu{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;margin-top:12px}
+.uclu b{display:block;font-size:22px}
+.bolum{display:flex;align-items:center;gap:14px;background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.bolum .ik{font-size:26px}.bolum .ad{font-weight:700}.bolum .ok{margin-left:auto;font-size:24px;color:var(--muted)}
+.dugme{display:block;width:100%;border:0;border-radius:14px;padding:14px;font:700 17px/1.2 inherit;font-family:inherit;cursor:pointer;text-align:center}
+.d-ana{background:var(--main);color:#fff}.d-ok{background:var(--ok);color:#fff}.d-bad{background:var(--bad);color:#fff}
+.d-cerceve{background:var(--paper);color:var(--main);border:1.5px solid var(--main)}
+.d-soluk{background:var(--paper);color:var(--muted);border:1.5px solid var(--line)}
+.d-altin{background:var(--paper);color:var(--gold);border:1.5px solid var(--gold)}
+.d-kirmizi{background:var(--bad-soft);color:var(--bad);border:1.5px solid var(--bad)}
+.ikili{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.deyim{font-size:28px;font-weight:700;text-align:center;margin:20px 0 18px}
+.kutu{border-radius:12px;padding:14px}
+.k-mor{background:var(--main-soft)}.k-altin{background:var(--gold-soft)}.k-yesil{background:var(--ok-soft)}.k-kirmizi{background:var(--bad-soft)}
+mark{background:none;color:var(--main);font-weight:700;text-decoration:underline}
+.secenek{display:flex;gap:12px;align-items:center;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit}
+.secenek .h{flex:none;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--main);color:var(--main);display:grid;place-items:center;font-weight:700}
+.secenek.dogru{background:var(--ok-soft);border-color:var(--ok)}.secenek.dogru .h{border-color:var(--ok);color:var(--ok)}
+.secenek.yanlis{background:var(--bad-soft);border-color:var(--bad)}.secenek.yanlis .h{border-color:var(--bad);color:var(--bad)}
+.ust{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.satir{display:flex;justify-content:space-between;gap:10px;align-items:center}
+input[type=search]{width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--line);font:inherit;background:var(--paper)}
+.liste-ogesi{background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+.ses{background:none;border:0;font-size:22px;cursor:pointer}
+.ortala{text-align:center}
+.serit{width:6px;align-self:stretch;border-radius:3px}
+</style>
+</head>
+<body>
+<header><button id="geri" aria-label="Geri" hidden>←</button><h1 id="baslik">Deyim Ustası</h1></header>
+<main id="ekran"></main>
+<script>
+var VERI = {"deyimler": [["Göz", "göz atmak", "Bir şeye kısaca, üstünkörü bakmak", "Sınavdan önce notlarıma son kez [göz attım].", "bakmak"], ["Göz", "gözden geçirmek", "Bir şeyi baştan sona inceleyip kontrol etmek", "Ödevimi teslim etmeden önce bir kez daha [gözden geçirdim].", "bakmak"], ["Göz", "göz boyamak", "Bir işi olduğundan iyi gösterip aldatmak", "Odasını toplamadı, eşyaları dolaba tıkıp [göz boyadı].", "kandirmak"], ["Göz", "göz yummak", "Bir yanlışı görmezden gelmek, hoş görmek", "Öğretmenimiz bu seferlik küçük hatamıza [göz yumdu].", ""], ["Göz", "gözden düşmek", "Önceki değerini ve sevgisini yitirmek", "Sürekli yalan söylediği için arkadaşlarının arasında [gözden düştü].", "deger_yitirmek"], ["Göz", "göz kulak olmak", "Bir kimseyi ya da bir şeyi gözetip korumak", "Annem markete gidince kardeşime ben [göz kulak oldum].", "korumak"], ["Göz", "gözü tutmak", "Bir şeyi ya da birini beğenmek", "Vitrindeki mavi çanta hemen [gözümü tuttu].", "begenmek"], ["Göz", "gözüne girmek", "Birinin sevgisini ve beğenisini kazanmak", "Yeni öğrenci çalışkanlığıyla kısa sürede öğretmenin [gözüne girdi].", ""], ["Göz", "gözden kaçmak", "Fark edilmemek, görülmeden kalmak", "Yazımdaki küçük bir hata [gözden kaçmış].", ""], ["Göz", "gözünü dört açmak", "Çok dikkatli ve uyanık olmak", "Kalabalık çarşıda kaybolmamak için [gözünü dört aç].", "dikkat"], ["Göz", "gözü yemek", "Bir işi yapabileceğine güvenmek, cesaret etmek", "O yüksek kayadan suya atlamaya [gözüm yemedi].", ""], ["Göz", "gözü kara", "Hiçbir tehlikeden çekinmeyen, korkusuz", "[Gözü kara] itfaiyeci yanan binaya hiç duraksamadan girdi.", ""], ["Göz", "gözüne uyku girmemek", "Kaygı ya da heyecan yüzünden uyuyamamak", "Yarınki gezi yüzünden heyecandan [gözüme uyku girmedi].", ""], ["Göz", "göz nuru dökmek", "Gözünü yoracak kadar emek vererek çalışmak", "Ninem bu dantele yıllarca [göz nuru döktü].", "emek"], ["Göz", "göz dikmek", "Başkasına ait bir şeyi ele geçirmek istemek", "Kardeşim hep benim oyuncaklarıma [göz diker].", ""], ["Göz", "gözü arkada kalmak", "Ayrıldığı yeri ya da kişiyi düşünüp kaygılanmak", "Köyden ayrılırken dedemi düşünüp [gözüm arkada kaldı].", ""], ["Göz", "göze batmak", "Aykırı ya da dikkat çekici olduğu için hemen fark edilmek", "Herkes sade giyinmişti, onun parlak ceketi [göze battı].", ""], ["Göz", "gözü doymamak", "Ne kadar alsa da yetinmemek, hep daha fazlasını istemek", "Bu kadar oyuncağı var ama yine de [gözü doymuyor].", ""], ["Göz", "gözü yolda kalmak", "Birinin gelmesini çok özlemle beklemek", "Askerdeki ağabeyimi bekleyen annemin [gözü yolda kaldı].", "beklemek"], ["Göz", "dört gözle beklemek", "Bir şeyi büyük bir istekle beklemek", "Yaz tatilini [dört gözle bekliyorum].", "beklemek,istek"], ["El-Ayak", "el atmak", "Bir işe girişmek, başlamak", "Ablam bu yaz resim yapmaya [el attı].", "baslamak"], ["El-Ayak", "el ele vermek", "Birlikte çalışmak, yardımlaşmak", "Sınıfça [el ele verip] okul bahçesini temizledik.", "birlikte"], ["El-Ayak", "el uzatmak", "Yardım etmek", "Zor durumda kalanlara [el uzatmalıyız].", "yardim"], ["El-Ayak", "eli açık", "Cömert, elindekini paylaşmayı seven", "Dedem çok [eli açık] biridir, herkese yardım eder.", ""], ["El-Ayak", "eli sıkı", "Para harcamaktan kaçınan, cimri", "Amcam [eli sıkı] olduğu için gereksiz hiçbir şeye para vermez.", ""], ["El-Ayak", "elinden geleni yapmak", "Bir iş için gücünün yettiği kadar çalışmak", "Takımımız kazanmak için [elinden geleni yaptı].", "emek"], ["El-Ayak", "eli kulağında", "Olması çok yakın, neredeyse gelmiş", "Yaz tatili [eli kulağında], az kaldı.", ""], ["El-Ayak", "el altından", "Gizlice, kimseye belli etmeden", "Sürpriz hediyeyi [el altından] hazırlamışlar.", "gizli"], ["El-Ayak", "elinde olmamak", "İsteği dışında olmak, engel olamamak", "Komik sahneyi görünce gülmemek [elimde değildi].", ""], ["El-Ayak", "ele almak", "Bir konuyu incelemek, üzerinde durmak", "Bu kitap çevre kirliliği konusunu [ele alıyor].", ""], ["El-Ayak", "eli boş dönmek", "Bir şey elde edemeden geri gelmek", "Balığa gittik ama [eli boş döndük].", ""], ["El-Ayak", "el sürmemek", "Hiç dokunmamak, hiç başlamamak", "Çok üzgün olduğu için yemeğine [el sürmedi].", "yapmamak"], ["El-Ayak", "el üstünde tutmak", "Bir kimseye çok değer verip saygı göstermek", "Köylüler, okula gelen öğretmeni [el üstünde tuttu].", "deger"], ["El-Ayak", "eline su dökememek", "Birinden çok aşağıda kalmak, onun kadar iyi olamamak", "Resim yapmakta kimse ablasının [eline su dökemez].", ""], ["El-Ayak", "ele avuca sığmamak", "Çok yaramaz olmak, söz dinlememek", "Küçük kardeşim bugün [ele avuca sığmıyor].", ""], ["El-Ayak", "elini çabuk tutmak", "Bir işi yaparken acele etmek", "[Elini çabuk tut], servis kapıya geldi.", "acele"], ["El-Ayak", "eli kolu bağlı kalmak", "Bir şey yapamaz duruma düşmek, çaresiz kalmak", "Sel suları evi basınca [eli kolu bağlı kaldı].", "kotu_durum"], ["El-Ayak", "ayak uydurmak", "Bir yere ya da duruma uyum sağlamak", "Yeni okuluna kısa sürede [ayak uydurdu].", ""], ["El-Ayak", "ayağını denk almak", "Başına bir iş gelmemesi için dikkatli davranmak", "Bu konuda [ayağını denk al], sonra pişman olmayasın.", "dikkat"], ["El-Ayak", "ayaklarına kara sular inmek", "Çok yürümekten ya da ayakta durmaktan yorulmak", "Bütün gün müze gezmekten [ayaklarıma kara sular indi].", ""], ["El-Ayak", "ayak diremek", "Bir isteğinden vazgeçmemek, direnmek", "Kardeşim parka gitmek için [ayak diredi].", ""], ["El-Ayak", "ayak altında dolaşmak", "Bir yerde gereksiz yere bulunup işleri aksatmak", "Mutfakta [ayak altında dolaşma], yemek hazırlıyorum.", ""], ["El-Ayak", "ayakları yere basmak", "Gerçekçi olmak, hayallere kapılmamak", "Planlarının [ayakları yere basıyor], hepsi yapılabilir şeyler.", ""], ["El-Ayak", "ayak bağı olmak", "Bir işin yapılmasını engellemek, zorlaştırmak", "Küçük kardeşim oyunda bize [ayak bağı oldu].", ""], ["El-Ayak", "kolları sıvamak", "Bir işe başlamak için hazırlanmak", "Bahçeyi temizlemek için hep birlikte [kolları sıvadık].", "baslamak"], ["El-Ayak", "kol kanat germek", "Birini korumak, kollamak", "Ablası, küçük kardeşine her zaman [kol kanat gerer].", "korumak"], ["El-Ayak", "iki ayağını bir pabuca sokmak", "Birini çok acele ettirmek", "Annem sabah servise yetişelim diye [iki ayağımı bir pabuca soktu].", "acele"], ["El-Ayak", "adım atmak", "Bir işe başlamak", "Ablam, yazar olma yolunda ilk [adımı attı].", "baslamak"], ["Baş-Yüz", "baş başa vermek", "Bir konu üzerinde birlikte düşünüp çalışmak", "Fen projesi için arkadaşlarımla [baş başa verdik].", "birlikte"], ["Baş-Yüz", "başı göğe ermek", "Çok sevinmek, kendini çok mutlu hissetmek", "Birincilik ödülünü alınca [başı göğe erdi].", "sevinc"], ["Baş-Yüz", "başını derde sokmak", "Kendini sıkıntılı bir duruma düşürmek", "Yalan söyleyerek [başını derde sokma].", "kotu_durum"], ["Baş-Yüz", "baş göstermek", "Ortaya çıkmak, belirmek", "Yağmur yağmayınca köyde su sıkıntısı [baş gösterdi].", ""], ["Baş-Yüz", "başı darda kalmak", "Sıkıntılı, güç bir duruma düşmek", "[Başın darda kalırsa] bize haber ver.", "kotu_durum"], ["Baş-Yüz", "başına buyruk", "Kimseyi dinlemeyen, kendi bildiğini yapan", "O çok [başına buyruk], hiçbir öneriyi dinlemez.", ""], ["Baş-Yüz", "başını taştan taşa vurmak", "Yaptığına çok pişman olmak", "Bu fırsatı kaçırırsan sonra [başını taştan taşa vurursun].", ""], ["Baş-Yüz", "baştan savma", "Özensiz, üstünkörü yapılmış", "Ödevini [baştan savma] yapınca düşük not aldı.", ""], ["Baş-Yüz", "başı çekmek", "Bir işte öncülük etmek", "Kermes hazırlıklarında Elif [başı çekiyordu].", ""], ["Baş-Yüz", "baş tacı etmek", "Bir kimseye çok saygı gösterip değer vermek", "Bu kasabada misafirleri her zaman [baş tacı ederler].", "deger"], ["Baş-Yüz", "başından geçmek", "Bir olayı yaşamak", "Dedem, çocukken [başından geçen] ilginç bir olayı anlattı.", ""], ["Baş-Yüz", "yüzü kızarmak", "Utanmak", "Yanlış cevap verince [yüzü kızardı].", ""], ["Baş-Yüz", "yüz çevirmek", "İlgisini kesmek, uzak durmak", "Zor günlerinde hiçbir arkadaşı ondan [yüz çevirmedi].", ""], ["Baş-Yüz", "yüz vermek", "Fazla hoş görüp şımartmak", "Kardeşine bu kadar [yüz verme], şımarıyor.", ""], ["Baş-Yüz", "yüzüne gözüne bulaştırmak", "Bir işi beceremeyip bozmak", "Kitaplığı tek başına kurmaya çalıştı ama [yüzüne gözüne bulaştırdı].", ""], ["Baş-Yüz", "yüzü gülmek", "Sevinmek, mutlu olmak", "Yağmur yağınca çiftçilerin [yüzü güldü].", "sevinc"], ["Baş-Yüz", "yüz yüze gelmek", "Karşılaşmak", "Kapıdan çıkarken öğretmenimle [yüz yüze geldik].", "karsilasmak"], ["Baş-Yüz", "yüzünü kara çıkarmak", "Birini utandırmak, mahcup etmek", "Annem bana güvenmişti, onun [yüzünü kara çıkarmak] istemedim.", ""], ["Baş-Yüz", "alnının akıyla", "Başarıyla ve onuruyla, yüz kızartıcı bir şey yapmadan", "Dedem görevini [alnının akıyla] tamamladı.", ""], ["Baş-Yüz", "alın teri dökmek", "Bir iş için çok emek vermek", "Çiftçi bu ürün için tarlada [alın teri döktü].", "emek"], ["Baş-Yüz", "burnu havada", "Kendini beğenmiş, kibirli", "Maçı kazandıktan sonra [burnu havada] dolaşıyor.", "kibir"], ["Baş-Yüz", "burnunun dibinde", "Çok yakınında", "Her yerde aradığı kalem [burnunun dibindeymiş].", ""], ["Baş-Yüz", "burun kıvırmak", "Beğenmemek, küçümsemek", "Kardeşim sebze yemeğine [burun kıvırdı].", ""], ["Baş-Yüz", "burun buruna gelmek", "Çok yakından karşılaşmak", "Sokağın köşesinde bir köpekle [burun buruna geldim].", "karsilasmak"], ["Baş-Yüz", "burnundan solumak", "Çok öfkelenmek", "Maçı kaybedince [burnundan soluyordu].", "ofke"], ["Baş-Yüz", "kafa yormak", "Bir şey üzerinde çok düşünmek", "Bu problemi çözmek için saatlerce [kafa yordum].", "dusunmek"], ["Baş-Yüz", "kafasına koymak", "Bir şeyi yapmaya kesin karar vermek", "Bu yıl elli kitap okumayı [kafasına koydu].", ""], ["Ağız-Dil-Kulak", "ağzı kulaklarına varmak", "Çok sevinmek", "Karnesini görünce [ağzı kulaklarına vardı].", "sevinc"], ["Ağız-Dil-Kulak", "ağzı sıkı", "Sır saklayan, sır vermeyen", "Ona güvenebilirsin, çok [ağzı sıkıdır].", "sir"], ["Ağız-Dil-Kulak", "ağzında bakla ıslanmamak", "Sır saklayamamak, duyduğunu hemen söylemek", "Ona sırrını söyleme, [ağzında bakla ıslanmaz].", "sir"], ["Ağız-Dil-Kulak", "ağzından kaçırmak", "Söylememesi gereken bir şeyi istemeden söylemek", "Kardeşim sürpriz partiyi [ağzından kaçırdı].", ""], ["Ağız-Dil-Kulak", "ağzına bir parmak bal çalmak", "Küçük bir şey verip ya da umut verip kandırmak", "[Ağzıma bir parmak bal çalıp] bütün işi bana yaptırdı.", "kandirmak"], ["Ağız-Dil-Kulak", "ağız birliği etmek", "Herkesin aynı şeyi söylemesi için anlaşmak", "İki kardeş [ağız birliği etmiş], öğretmene aynı şeyi anlattılar.", ""], ["Ağız-Dil-Kulak", "ağzı açık kalmak", "Çok şaşırmak", "Sihirbazın numarasını görünce [ağzım açık kaldı].", "saskin"], ["Ağız-Dil-Kulak", "ağzını bıçak açmamak", "Üzüntüden konuşamaz duruma gelmek", "Kedisi kaybolduğundan beri [ağzını bıçak açmıyor].", "konusamamak"], ["Ağız-Dil-Kulak", "ağzının payını vermek", "Haksız konuşan birine hak ettiği sert cevabı vermek", "Haksız yere suçlayan çocuğa [ağzının payını verdi].", ""], ["Ağız-Dil-Kulak", "ağzı var dili yok", "Çok sessiz, kendini savunamayan", "Bu çocuk [ağzı var dili yok], hiç şikâyet etmez.", ""], ["Ağız-Dil-Kulak", "dili tutulmak", "Heyecan ya da korku yüzünden konuşamamak", "Sahneye çıkınca heyecandan [dili tutuldu].", "konusamamak"], ["Ağız-Dil-Kulak", "dilini yutmak", "Şaşkınlık ya da korkudan konuşamaz olmak", "Fiyatı duyunca neredeyse [dilini yutacaktı].", "konusamamak,saskin"], ["Ağız-Dil-Kulak", "dilinin altındaki baklayı çıkarmak", "Söylemekten çekindiği şeyi sonunda açıkça söylemek", "Uzun süre sustu, sonunda [dilinin altındaki baklayı çıkardı].", ""], ["Ağız-Dil-Kulak", "dil dökmek", "Birini inandırmak ya da razı etmek için çok konuşmak", "Geziye gitmek için anneme saatlerce [dil döktüm].", ""], ["Ağız-Dil-Kulak", "dile getirmek", "Bir duygu ya da düşünceyi söylemek, anlatmak", "Şair bu şiirinde vatan sevgisini [dile getirmiş].", ""], ["Ağız-Dil-Kulak", "dilinde tüy bitmek", "Aynı şeyi söylemekten bıkmak", "\"Odanı topla\" demekten [dilimde tüy bitti].", ""], ["Ağız-Dil-Kulak", "dilinin ucunda olmak", "Bildiği bir şeyi o an hatırlayamamak", "Şarkının adı [dilimin ucunda] ama bir türlü söyleyemiyorum.", ""], ["Ağız-Dil-Kulak", "diline dolamak", "Bir sözü ya da şarkıyı durmadan söylemek", "Kardeşim bu şarkıyı [diline doladı], bütün gün söylüyor.", ""], ["Ağız-Dil-Kulak", "çenesi düşmek", "Çok konuşmak, susmak bilmemek", "Bugün [çenesi düşmüş], bir an bile susmuyor.", ""], ["Ağız-Dil-Kulak", "lafı ağzında gevelemek", "Söylemek istediğini açıkça söyleyemeyip dolandırmak", "[Lafı ağzında geveleme], ne istediğini açıkça söyle.", ""], ["Ağız-Dil-Kulak", "kulak asmamak", "Söylenenlere önem vermemek, dinlememek", "Uyarılara [kulak asmadı] ve yağmurda sırılsıklam oldu.", "dinlememek"], ["Ağız-Dil-Kulak", "kulak ardı etmek", "Bir sözü önemsememek, duymazdan gelmek", "Annesinin öğütlerini [kulak ardı etti].", "dinlememek"], ["Ağız-Dil-Kulak", "kulak vermek", "Söylenen bir şeyi dikkatle dinlemek", "Büyüklerimizin öğütlerine [kulak vermeliyiz].", "dinlemek"], ["Ağız-Dil-Kulak", "can kulağıyla dinlemek", "Çok dikkatli ve istekli dinlemek", "Öğretmenimizin anlattığı masalı [can kulağıyla dinledik].", "dinlemek"], ["Ağız-Dil-Kulak", "kulağına küpe olmak", "Yaşanan bir olaydan ders çıkarıp unutmamak", "Bu kaza hepimizin [kulağına küpe oldu].", "ders"], ["Ağız-Dil-Kulak", "kulak kabartmak", "Gizlice dinlemeye çalışmak", "Yan masadakilerin konuşmasına [kulak kabarttı].", "gizli_dinlemek"], ["Ağız-Dil-Kulak", "kulak misafiri olmak", "Başkalarının konuşmasını istemeden duymak", "Otobüste iki kişinin konuşmasına [kulak misafiri oldum].", "gizli_dinlemek"], ["Ağız-Dil-Kulak", "kulaktan dolma", "Araştırmadan, duyarak öğrenilmiş (bilgi)", "[Kulaktan dolma] bilgilerle karar vermemeliyiz.", ""], ["Ağız-Dil-Kulak", "kulaklarına inanamamak", "Duyduğu şeye çok şaşırmak", "Yarışmayı kazandığını duyunca [kulaklarına inanamadı].", "saskin"], ["Gönül-İç-Akıl", "gönül almak", "Kırdığı birini sevindirip barışmak", "Kırdığı arkadaşının [gönlünü almak] için ona bir resim çizdi.", ""], ["Gönül-İç-Akıl", "gönül koymak", "Darılmak, kırılmak", "Doğum gününe çağrılmayınca [gönül koydu].", ""], ["Gönül-İç-Akıl", "gönül vermek", "Bir şeyi ya da birini çok sevip bağlanmak", "Dedem gençliğinden beri çiftçiliğe [gönül vermiş].", ""], ["Gönül-İç-Akıl", "kalbini kırmak", "Birini üzmek, gücendirmek", "Yersiz şakasıyla arkadaşının [kalbini kırdı].", ""], ["Gönül-İç-Akıl", "içi içine sığmamak", "Sevinç ya da heyecandan yerinde duramamak", "Tatil yaklaştıkça [içi içine sığmıyordu].", "sevinc"], ["Gönül-İç-Akıl", "içi rahat etmek", "Kaygısı kalmamak, rahatlamak", "Kardeşimin eve vardığını duyunca [içim rahat etti].", "rahatlamak"], ["Gönül-İç-Akıl", "yüreğine su serpilmek", "Kaygı ve korkudan kurtulup rahatlamak", "Kaybolan kedisinin bulunduğunu duyunca [yüreğine su serpildi].", "rahatlamak"], ["Gönül-İç-Akıl", "içi sızlamak", "Bir şeye çok üzülmek, acımak", "Sokaktaki aç kediyi görünce [içim sızladı].", "uzuntu"], ["Gönül-İç-Akıl", "içi burkulmak", "Hüzünlenmek, içi acımak", "En yakın arkadaşı taşınınca [içi burkuldu].", "uzuntu"], ["Gönül-İç-Akıl", "içi kan ağlamak", "Çok üzülüp bunu belli etmemek", "Yarışmayı kaybedince [içi kan ağladı] ama gülümsemeye çalıştı.", "uzuntu"], ["Gönül-İç-Akıl", "içine kurt düşmek", "Bir şeyden kuşkulanmak", "Kapıyı açık görünce [içine kurt düştü].", ""], ["Gönül-İç-Akıl", "içini dökmek", "Derdini, sıkıntısını birine anlatmak", "Annesine [içini döktü] ve rahatladı.", ""], ["Gönül-İç-Akıl", "yüreği ağzına gelmek", "Çok korkmak", "Arkasından bir köpek havlayınca [yüreği ağzına geldi].", "korku"], ["Gönül-İç-Akıl", "yüreği dayanmamak", "Gördüğü bir duruma acıyıp katlanamamak", "Kanadı kırık kuşu görünce [yüreği dayanmadı].", "uzuntu"], ["Gönül-İç-Akıl", "aklı başına gelmek", "Doğru düşünüp davranmaya başlamak", "Notları düşünce [aklı başına geldi] ve çalışmaya başladı.", "yola_gelmek"], ["Gönül-İç-Akıl", "akıl almak", "Bir konuda birine danışmak", "Ödevim için ablamdan [akıl aldım].", ""], ["Gönül-İç-Akıl", "aklı yatmak", "Bir şeyin doğru olduğuna inanmak", "Bu açıklamaya hiç [aklım yatmadı].", ""], ["Gönül-İç-Akıl", "aklından çıkmamak", "Bir şeyi sürekli düşünmek, unutamamak", "O güzel film hâlâ [aklımdan çıkmıyor].", ""], ["Gönül-İç-Akıl", "akla karayı seçmek", "Bir işi yaparken çok zorlanmak", "Bu dağa tırmanırken [akla karayı seçtik].", "zorlanmak"], ["Gönül-İç-Akıl", "aklı karışmak", "Ne yapacağını bilemez duruma gelmek", "Bu kadar seçeneği görünce [aklım karıştı].", ""], ["Gönül-İç-Akıl", "can atmak", "Bir şeyi çok istemek", "Yeni çıkan kitabı okumaya [can atıyorum].", "istek"], ["Gönül-İç-Akıl", "canla başla", "Büyük bir istek ve özveriyle", "Sınava [canla başla] çalışarak hazırlandı.", ""], ["Gönül-İç-Akıl", "canı sıkılmak", "Bunalmak, yapacak bir şey bulamamak", "Yağmurlu günde evde çok [canım sıkıldı].", ""], ["Gönül-İç-Akıl", "kafası çalışmak", "Zeki olmak, çabuk kavramak", "Bulmacaları hemen çözüyor, [kafası çok çalışıyor].", ""], ["Duygular", "etekleri zil çalmak", "Çok sevinmek", "Tatil haberini duyunca [etekleri zil çaldı].", "sevinc"], ["Duygular", "kabına sığmamak", "Sevinç ya da coşkudan yerinde duramamak", "Takımı şampiyon olunca sevinçten [kabına sığmıyordu].", "sevinc"], ["Duygular", "tepesi atmak", "Birden çok kızmak", "Kardeşi oyuncağını kırınca [tepesi attı].", "ofke"], ["Duygular", "küplere binmek", "Çok öfkelenmek", "Vazonun kırıldığını görünce [küplere bindi].", "ofke"], ["Duygular", "ateş püskürmek", "Öfkeyle bağırıp çağırmak", "Hakem yanlış karar verince taraftarlar [ateş püskürdü].", "ofke"], ["Duygular", "çileden çıkmak", "Çok kızıp kendini tutamaz olmak", "Bitmeyen gürültü yüzünden sonunda [çileden çıktı].", "ofke"], ["Duygular", "sabrı taşmak", "Daha fazla dayanamaz duruma gelmek", "Kardeşi aynı soruyu yirminci kez sorunca [sabrı taştı].", "ofke"], ["Duygular", "ödü kopmak", "Çok korkmak", "Karanlık odada bir ses duyunca [ödüm koptu].", "korku"], ["Duygular", "kanı donmak", "Korkudan donup kalmak", "Uçurumun kenarından aşağı bakınca [kanım dondu].", "korku"], ["Duygular", "tüyleri diken diken olmak", "Korku, heyecan ya da duygulanmadan ürpermek", "İstiklal Marşı'nı dinlerken [tüylerim diken diken oldu].", "korku"], ["Duygular", "etekleri tutuşmak", "Çok telaşlanmak", "Otobüsü kaçıracağını anlayınca [etekleri tutuştu].", "telas,acele"], ["Duygular", "dokuz doğurmak", "Bir şeyi beklerken çok sabırsızlanıp sıkıntı çekmek", "Sınav sonucu açıklanana kadar [dokuz doğurdum].", "beklemek"], ["Duygular", "iple çekmek", "Bir şeyi sabırsızlıkla beklemek", "Bayramın gelmesini [iple çekiyorum].", "beklemek"], ["Duygular", "dut yemiş bülbüle dönmek", "Konuşkanken birden susmak", "Öğretmen soru sorunca [dut yemiş bülbüle döndü].", "konusamamak"], ["Duygular", "buz kesmek", "Çok üşümek", "Karda otobüs beklerken [buz kestik].", ""], ["Duygular", "dişini sıkmak", "Bir zorluğa sabırla katlanmak", "Ayağı ağrımasına rağmen [dişini sıktı] ve yarışı bitirdi.", "katlanmak"], ["Duygular", "kendini dev aynasında görmek", "Kendini olduğundan çok daha üstün sanmak", "Bir maç kazandı diye [kendini dev aynasında görüyor].", "kibir"], ["Duygular", "diş bilemek", "Birinden öç almak için fırsat kollamak", "Geçen yıl yenildikleri takıma [diş biliyorlar].", ""], ["Duygular", "parmak ısırmak", "Çok beğenip hayran kalmak", "Resmini görenler [parmak ısırdı].", "begenmek"], ["Duygular", "yere göğe sığdıramamak", "Birini çok övmek", "Annem yeni komşumuzu [yere göğe sığdıramıyor].", ""], ["Davranışlar", "kılı kırk yarmak", "Bir işte çok titiz davranmak", "Ödevlerini hazırlarken [kılı kırk yarar], hiçbir ayrıntıyı atlamaz.", ""], ["Davranışlar", "pireyi deve yapmak", "Küçük bir sorunu çok büyütmek", "Sadece kalemini ödünç aldım, [pireyi deve yapma].", ""], ["Davranışlar", "ipe un sermek", "Bir işi yapmamak için türlü bahaneler bulmak", "Ne zaman yardım istesem [ipe un seriyor].", "bahane"], ["Davranışlar", "kırk dereden su getirmek", "Bir şeyi yapmamak için uzun uzun bahaneler sıralamak", "Odasını toplamamak için [kırk dereden su getirdi].", "bahane"], ["Davranışlar", "işi yokuşa sürmek", "Bir işi bahanelerle zorlaştırıp yapmamaya çalışmak", "Bulaşık sırası gelince hemen [işi yokuşa sürüyor].", "bahane"], ["Davranışlar", "suya sabuna dokunmamak", "Tartışma yaratabilecek işlere karışmamak", "Komşumuz [suya sabuna dokunmayan], sessiz biridir.", ""], ["Davranışlar", "kılını kıpırdatmamak", "Hiçbir şey yapmamak, en küçük yardımda bile bulunmamak", "Herkes çalışırken o [kılını kıpırdatmadı].", "yapmamak"], ["Davranışlar", "saman altından su yürütmek", "Gizlice iş çevirmek", "Sessiz görünür ama [saman altından su yürütür].", "gizli"], ["Davranışlar", "nabzına göre şerbet vermek", "Birinin hoşuna gidecek biçimde davranıp konuşmak", "Herkesin [nabzına göre şerbet veriyor], kimseyi kızdırmıyor.", ""], ["Davranışlar", "ateşle oynamak", "Tehlikeli bir işe girişmek", "Kurallara uymayarak [ateşle oynuyorsun].", ""], ["Davranışlar", "yangına körükle gitmek", "Kötü bir durumu daha da kötüleştirmek", "Kavgayı yatıştıracağına [yangına körükle gitti].", ""], ["Davranışlar", "çam devirmek", "Düşünmeden kırıcı bir söz söylemek", "Misafire yaşını sorarak [çam devirdi].", ""], ["Davranışlar", "bel bağlamak", "Birine ya da bir şeye güvenmek", "Sınavda arkadaşının yardımına [bel bağlama].", "guvenmek"], ["Davranışlar", "boy ölçüşmek", "Biriyle yarışmak, güç denemek", "Bu küçük takım şampiyonla [boy ölçüşebilir].", ""], ["Davranışlar", "göğüs germek", "Bir zorluğa ya da saldırıya karşı direnmek", "Askerlerimiz düşmana [göğüs gerdi].", "katlanmak"], ["Davranışlar", "omuz omuza vermek", "Birlikte çalışmak, dayanışmak", "Kurtuluş Savaşı'nda bütün millet [omuz omuza verdi].", "birlikte"], ["Davranışlar", "ağaç olmak", "Bir yerde beklemekten çok sıkılmak", "Seni beklerken burada [ağaç oldum].", "beklemek"], ["Davranışlar", "dört dönmek", "Bir iş için telaşla oradan oraya koşmak", "Annem misafir gelecek diye evde [dört döndü].", "telas,acele"], ["Davranışlar", "ter dökmek", "Bir iş için çok çalışmak", "Bu başarı için hepimiz çok [ter döktük].", "emek"], ["Davranışlar", "yerinde saymak", "Hiç ilerleme gösterememek", "Bu dönem matematik notlarım [yerinde saydı].", ""], ["Davranışlar", "armut piş, ağzıma düş", "Hiç çaba göstermeden bir şeyin kendiliğinden olmasını beklemek", "[Armut piş, ağzıma düş] diye beklersen hiçbir şey başaramazsın.", ""], ["Davranışlar", "ekmeğini taştan çıkarmak", "Geçimini çok zor şartlarda kazanmak", "Madenci dedem [ekmeğini taştan çıkardı].", ""], ["Davranışlar", "arpacı kumrusu gibi düşünmek", "Derin derin, dalgın dalgın düşünmek", "Ne yapacağını bilemeyip [arpacı kumrusu gibi düşünüyordu].", "dusunmek"], ["Davranışlar", "şapkasını önüne koyup düşünmek", "Bir durumu enine boyuna düşünüp kendini sorgulamak", "Yaptığın bu yanlışı [şapkanı önüne koyup düşünmelisin].", "dusunmek"], ["Davranışlar", "iğneyle kuyu kazmak", "Zor bir işi büyük bir sabırla azar azar yapmak", "Bin parçalık yapbozu tek başıma tamamlamak [iğneyle kuyu kazmak] gibiydi.", "zorlanmak"], ["Davranışlar", "yola gelmek", "Doğru davranmaya başlamak, söz dinler olmak", "Ceza alınca hemen [yola geldi].", "yola_gelmek"], ["Davranışlar", "yol göstermek", "Ne yapması gerektiğini birine öğretmek", "Öğretmenimiz bize her zaman [yol gösterir].", ""], ["Davranışlar", "sözünü tutmak", "Verdiği sözü yerine getirmek", "Babam [sözünü tuttu] ve beni sinemaya götürdü.", ""], ["Günlük Hayat", "devede kulak", "Bir bütünün yanında çok küçük kalan", "Topladığımız para, ihtiyacın yanında [devede kulak].", ""], ["Günlük Hayat", "kuş uçurtmamak", "Bir yeri çok sıkı korumak, hiçbir şeyi kaçırmamak", "Bekçiler bahçeden [kuş uçurtmuyor].", "korumak"], ["Günlük Hayat", "kedi gibi dört ayak üstüne düşmek", "Zor durumlardan kolayca kurtulmak", "Ne olursa olsun [kedi gibi dört ayak üstüne düşer].", ""], ["Günlük Hayat", "iki eli kanda olsa", "Ne kadar önemli bir işi olsa da", "[İki elin kanda olsa] yarın mutlaka gel.", ""], ["Günlük Hayat", "taş çatlasa", "En fazla, olsa olsa", "[Taş çatlasa] on dakikada gelir.", ""], ["Günlük Hayat", "havadan sudan konuşmak", "Önemsiz, gelişigüzel konulardan söz etmek", "Otobüste arkadaşımla [havadan sudan konuştuk].", ""], ["Günlük Hayat", "havada kalmak", "Sonuçsuz kalmak, karşılık görmemek", "Önerim kimse ilgilenmeyince [havada kaldı].", ""], ["Günlük Hayat", "zurnanın zırt dediği yer", "Bir işin en önemli, en zor noktası", "[Zurnanın zırt dediği yer] burası, dikkatli oku.", ""], ["Günlük Hayat", "gün yüzü görmemek", "Hiç rahat ve mutlu bir gün yaşamamak", "Savaş yıllarında halk [gün yüzü görmedi].", ""], ["Günlük Hayat", "gün doğmak", "Beklenmedik bir fırsat çıkmak", "Sınav ertelenince bize [gün doğdu].", ""], ["Günlük Hayat", "hapı yutmak", "Kötü bir duruma düşüp kurtulamamak", "Ödevimi evde unuttum, [hapı yuttum].", "kotu_durum"], ["Günlük Hayat", "ayvayı yemek", "Kötü bir durumla karşılaşmak", "Defterimi getirmedim, [ayvayı yedim].", "kotu_durum"], ["Günlük Hayat", "pabucu dama atılmak", "Değerini, önemini yitirmek", "Yeni oyuncak gelince eskisinin [pabucu dama atıldı].", "deger_yitirmek"], ["Günlük Hayat", "ipten almak", "Son anda kurtarmak", "Kalecimiz son dakikada takımı [ipten aldı].", ""], ["Günlük Hayat", "tadı kaçmak", "Hoşluğu, güzelliği bozulmak", "Yağmur başlayınca pikniğin [tadı kaçtı].", ""], ["Günlük Hayat", "tadını çıkarmak", "Bir şeyden sonuna kadar zevk almak", "Tatilin [tadını çıkardık].", ""], ["Günlük Hayat", "bir çırpıda", "Hemen, hiç zorlanmadan", "Bütün soruları [bir çırpıda] çözdü.", ""], ["Günlük Hayat", "ağır basmak", "Daha etkili ya da üstün olmak", "İki seçenek arasında doğa gezisi [ağır bastı].", ""], ["Günlük Hayat", "adı çıkmak", "Kötü bir özelliğiyle tanınır olmak", "Bir kez geç kaldı, hemen \"geç kalan\" diye [adı çıktı].", ""], ["Günlük Hayat", "parmakla gösterilmek", "Üstün bir özelliğiyle herkesçe tanınıp beğenilmek", "Başarısıyla okulda [parmakla gösterilen] bir öğrenci oldu.", ""], ["Günlük Hayat", "kızılca kıyamet kopmak", "Büyük bir gürültü ve kavga çıkmak", "Vazo kırılınca evde [kızılca kıyamet koptu].", ""], ["Günlük Hayat", "işin içinden çıkmak", "Bir işi çözüp sonuca bağlamak", "Bu soruyla çok uğraştım ama [işin içinden çıkamadım].", ""], ["Günlük Hayat", "ders almak", "Bir olaydan kendine pay çıkarmak", "Yaptığı hatadan [ders aldı] ve bir daha tekrarlamadı.", "ders"], ["Günlük Hayat", "eşek yükü kadar", "Çok fazla", "Hafta sonu için [eşek yükü kadar] ödevimiz var.", ""]], "gercek": [["el uzatmak", "Raftaki kitaba yetişmek için [elini uzattı]."], ["ağzı açık kalmak", "Dişçide muayene boyunca [ağzım açık kaldı]."], ["yerinde saymak", "Askerler komutanın emriyle [yerinde saydı]."], ["ayak uydurmak", "Bandonun ritmine [ayak uydurarak] yürüdük."], ["kolları sıvamak", "Bulaşık yıkarken ıslanmasın diye [kollarını sıvadı]."], ["ter dökmek", "Güneşin altında koşarken çok [ter döktük]."], ["içini dökmek", "Kalemini bulmak için çantasının [içini döktü]."], ["ağır basmak", "Terazinin sol kefesi daha [ağır bastı]."], ["yol göstermek", "Kaybolan turistlere müzenin [yolunu gösterdim]."], ["ateş püskürmek", "Yanardağ günlerdir [ateş püskürüyor]."], ["havada kalmak", "Fırlattığım top bir süre [havada kaldı]."], ["ders almak", "Ablam bu yıl piyano [dersi aldı]."], ["adım atmak", "Bebek bugün ilk [adımını attı]."], ["parmak ısırmak", "Bebek diş çıkarırken [parmağını ısırıyor]."], ["el üstünde tutmak", "Garson tepsiyi [el üstünde tutarak] taşıdı."], ["göz yummak", "Güneş çok parlak olunca [gözlerimi yumdum]."], ["el ele vermek", "Çocuklar [el ele verip] halka oldular."], ["buz kesmek", "Balıkçı, gölün donmuş yüzeyinden [buz kesti]."], ["el atmak", "Düşmemek için merdivenin korkuluğuna [el attı]."]], "deyimsiz": ["Sabah erkenden kalkıp kahvaltımı yaptım.", "Kütüphaneden iki yeni hikâye kitabı aldım.", "Akşam yemeğinde annemin yaptığı mercimek çorbasını içtik.", "Okulumuzun bahçesine yeni ağaçlar dikildi.", "Yarın sabah dedemleri ziyarete gideceğiz.", "Kardeşim resim dersinde bir kelebek çizdi.", "Hafta sonu ailemle birlikte sahilde yürüyüş yaptık.", "Öğretmenimiz bize Türkçe dersinde yeni bir şiir okudu.", "Yağmur yağınca şemsiyemi açtım.", "Bu yaz yüzme kursuna yazılmayı düşünüyorum.", "Kedimiz bütün gün pencerenin önünde uyudu.", "Matematik sınavı perşembe günü yapılacak.", "Babam bahçedeki çitleri yeşile boyadı.", "Teneffüste arkadaşlarımla top oynadık.", "Sabah okula giderken otobüse bindim.", "Ninem bize sıcacık bir ekmek pişirdi.", "Sınıfımızın panosuna yeni haberler astık.", "Kış gelince kuşlar sıcak ülkelere göç eder.", "Kardeşim her akşam dişlerini fırçalar.", "Hafta sonu sinemada bir animasyon filmi izledik.", "Fen dersinde bitkilerin nasıl büyüdüğünü öğrendik.", "Annem pazardan taze domates ve biber aldı.", "Bisikletimin lastiği patlayınca tamirciye götürdük.", "Okul kantininde tost ve ayran satılıyor.", "Dedem bahçesinde domates ve fasulye yetiştiriyor.", "Bayramda bütün akrabalarımız bize geldi.", "Odamın duvarına bir Türkiye haritası astım.", "Tatilde Karadeniz'in yeşil yaylalarını gezdik.", "Ödevimi bitirdikten sonra kitap okudum.", "Kardeşim bu yıl ilkokula başladı."]};
+// ---------- Veri ----------
+var DEYIMLER = VERI.deyimler.map(function(p){return {grup:p[0],ad:p[1],anlam:p[2],ornek:p[3],etiket:(p[4]||'').split(',').filter(Boolean)}});
+var GERCEK = VERI.gercek.map(function(p){return {deyim:DEYIMLER.find(function(d){return d.ad===p[0]}),cumle:p[1]}}).filter(function(g){return g.deyim});
+var DUZ = VERI.deyimsiz;
+var GRUPLAR = []; DEYIMLER.forEach(function(d){ if(GRUPLAR.indexOf(d.grup)<0) GRUPLAR.push(d.grup) });
+var GRUP_AD = {"Göz":"👁  Göz ile ilgili deyimler","El-Ayak":"✋  El, kol ve ayak","Baş-Yüz":"🙂  Baş, yüz ve burun","Ağız-Dil-Kulak":"👂  Ağız, dil ve kulak","Gönül-İç-Akıl":"💜  Gönül, iç ve akıl","Duygular":"😮  Duygular (sevinç, öfke, korku)","Davranışlar":"🧭  Davranışlar","Günlük Hayat":"🏠  Günlük hayattan"};
+function grupAdi(g){return GRUP_AD[g]||g}
+function ayniAnlam(a,b){ if(a===b) return true; return a.etiket.some(function(x){return b.etiket.indexOf(x)>=0}) }
+
+// ---------- Kayıt (telefonda saklanır) ----------
+var ANAHTAR='deyimUstasi.v1', ARALIK=[0,1,2,4,7,15], OGRENILDI=4;
+var K = yukle();
+function yukle(){ try{ var s=localStorage.getItem(ANAHTAR); if(s) return JSON.parse(s) }catch(e){} return {d:{},sonGun:0,seri:0,testler:[]} }
+function kaydet(){ try{ localStorage.setItem(ANAHTAR, JSON.stringify(K)) }catch(e){} }
+function bugun(){ var t=new Date(); return Math.floor((t.getTime()-t.getTimezoneOffset()*60000)/86400000) }
+function kay(d){ return K.d[d.ad] || {k:0,v:0,d:0,y:0,z:false} }
+function yaz(d,o){ K.d[d.ad]=o; kaydet() }
+function kutu(d){ return kay(d).k }
+function tekrarZamani(d){ var o=kay(d); return o.k>0 && o.v<=bugun() }
+function calisildi(){ var b=bugun(); if(K.sonGun===b) return; K.seri=(K.sonGun===b-1)?(K.seri||0)+1:1; K.sonGun=b; kaydet() }
+function seri(){ var b=bugun(); return (K.sonGun===b||K.sonGun===b-1)?(K.seri||0):0 }
+function ogrendim(d){ var o=kay(d); if(o.k===0){ o.k=1; o.v=bugun()+1; yaz(d,o) } calisildi() }
+function tekrarEt(d){ var o=kay(d); o.k=1; o.v=bugun(); yaz(d,o); calisildi() }
+function cevap(d,dogru){ var o=kay(d);
+  if(dogru){ if(o.k>0 && o.v>bugun()){ o.d++; o.z=false } else { o.k=Math.min(5,o.k+1); o.v=bugun()+ARALIK[o.k]; o.d++; o.z=false } }
+  else { o.k=1; o.v=bugun(); o.y++; o.z=true }
+  yaz(d,o); calisildi() }
+function durum(l){ var s=[0,0,0]; l.forEach(function(d){ var k=kutu(d); if(k===0) s[0]++; else if(k<OGRENILDI) s[1]++; else s[2]++ }); return s }
+function tekrarListesi(){ return DEYIMLER.filter(tekrarZamani) }
+function zayiflar(){ return DEYIMLER.filter(function(d){return kay(d).z}) }
+
+// ---------- Yardımcılar ----------
+var TR='tr-TR';
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function isaretle(c){ return esc(c).replace('[','<mark>').replace(']','</mark>') }
+function duz(c){ return esc(c.replace('[','').replace(']','')) }
+function bosluk(c){ var a=c.indexOf('['),b=c.indexOf(']'); return esc(c.slice(0,a))+'<b>__________</b>'+esc(c.slice(b+1)) }
+function buyukHarf(s){ return s ? s.charAt(0).toLocaleUpperCase(TR)+s.slice(1) : s }
+function karistir(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t } return a }
+var ekran=document.getElementById('ekran'), baslikEl=document.getElementById('baslik'), geriEl=document.getElementById('geri');
+var geriFn=null;
+geriEl.onclick=function(){ if(geriFn) geriFn() };
+function sayfa(baslik, geri){ baslikEl.textContent=baslik; geriEl.hidden=!geri; geriFn=geri||null; ekran.innerHTML=''; window.scrollTo(0,0); return ekran }
+function el(html){ var t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild }
+function ekle(html){ var e=el(html); ekran.appendChild(e); return e }
+
+// Sesli okuma
+function oku(metin){
+  if(!('speechSynthesis' in window)){ alert('Bu cihazda sesli okuma yok'); return }
+  speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(metin); u.lang='tr-TR'; u.rate=0.9;
+  var v=speechSynthesis.getVoices().find(function(x){return /^tr/i.test(x.lang)}); if(v) u.voice=v;
+  speechSynthesis.speak(u);
+}
+
+// ---------- Ana sayfa ----------
+function ana(){
+  sayfa('Deyim Ustası', null);
+  var s=durum(DEYIMLER), tekrar=tekrarListesi().length, z=zayiflar().length, sr=seri();
+  ekle('<div class="kart"><div class="etiket">6. sınıf Türkçe · '+DEYIMLER.length+' deyim</div>'+
+    '<div class="buyuk" style="margin-top:6px">'+s[2]+' deyim öğrenildi</div>'+
+    '<div class="cubuk"><i style="width:'+(100*s[2]/DEYIMLER.length)+'%"></i></div>'+
+    '<div class="uclu"><div><b style="color:var(--muted)">'+s[0]+'</b><span class="soluk">Yeni</span></div><div><b style="color:var(--gold)">'+s[1]+'</b><span class="soluk">Öğreniliyor</span></div><div><b style="color:var(--ok)">'+s[2]+'</b><span class="soluk">Öğrenildi</span></div></div>'+
+    '<div style="margin-top:12px;color:var(--main);font-weight:700;font-size:15px">'+(sr>0?('🔥 '+sr+' gündür art arda çalışıyorsun'+(K.sonGun===bugun()?'':' — bugün de çalış, seri bozulmasın!')):'Bugün çalışmaya başla, serini oluştur!')+'</div></div>');
+  bolum('📖','Öğren','Deyimleri konu konu kartlarla öğren','var(--main-soft)',ogrenMenu);
+  bolum('🔁','Bugünkü tekrar'+(tekrar?'  ('+tekrar+')':''), tekrar?tekrar+' deyimin tekrar zamanı geldi':'Bugün tekrar edilecek deyim yok', tekrar?'var(--gold-soft)':'var(--paper)', tekrarBasla);
+  bolum('📝','Test çöz','Sınavdaki gibi çoktan seçmeli sorular','var(--blue-soft)',testMenu);
+  bolum('❌','Yanlışlarım'+(z?'  ('+z+')':''), z?'Yanlış yaptığın deyimlerden test':'Henüz yanlış yaptığın deyim yok', z?'var(--bad-soft)':'var(--paper)', yanlislardan);
+  bolum('🔎','Deyim listesi','Tüm deyimler, anlamları ve arama','var(--paper)',function(){liste('')});
+  bolum('📊','İlerleme','Konulara göre durum ve test geçmişi','var(--paper)',ilerleme);
+  ekle('<p class="soluk ortala" style="font-size:12px">Anlamlar TDK Atasözleri ve Deyimler Sözlüğü esas alınarak hazırlanmıştır. İlerleme bu telefonda saklanır.</p>');
+}
+function bolum(ik,ad,alt,renk,fn){ var b=ekle('<button class="bolum" style="background:'+renk+'"><span class="ik">'+ik+'</span><span><span class="ad">'+esc(ad)+'</span><br><span class="soluk">'+esc(alt)+'</span></span><span class="ok">›</span></button>'); b.onclick=fn }
+
+// ---------- Öğren ----------
+function ogrenMenu(){
+  sayfa('Öğren', ana);
+  ekle('<p class="soluk" style="margin:0">Bir konu seç. Her kartta deyimi oku, anlamını tahmin et, sonra "Anlamını göster"e dokun.</p>');
+  GRUPLAR.forEach(function(g){
+    var l=DEYIMLER.filter(function(d){return d.grup===g}), s=durum(l);
+    var alt=s[0]===0?(s[2]===l.length?'Hepsi öğrenildi ✓':'Hepsine çalışıldı, tekrarla pekişecek'):s[0]+' yeni deyim seni bekliyor';
+    var k=ekle('<div class="kart" style="cursor:pointer"><div class="satir"><b>'+esc(grupAdi(g))+'</b><b style="color:var(--main)">'+(s[1]+s[2])+'/'+l.length+'</b></div><div class="cubuk"><i style="width:'+(100*s[2]/l.length)+'%"></i></div><div class="soluk" style="margin-top:6px">'+alt+'</div></div>');
+    k.onclick=function(){ kartlar(g, null) };
+  });
+}
+function kartGorunum(d, acik, ac){
+  var k=el('<div class="kart" style="padding:20px"><div class="satir"><span style="color:var(--main);font-weight:700;font-size:13px">'+esc(grupAdi(d.grup))+'</span><button class="ses" aria-label="Sesli oku">🔊</button></div>'+
+    '<div class="deyim">'+esc(buyukHarf(d.ad))+'</div></div>');
+  k.querySelector('.ses').onclick=function(){ oku(d.ad+'. '+(acik? d.anlam+'. '+d.ornek.replace('[','').replace(']','') : '')) };
+  if(!acik){ var b=el('<button class="dugme d-cerceve">Anlamını göster</button>'); b.onclick=ac; k.appendChild(b) }
+  else { k.appendChild(el('<div class="kutu k-mor"><div class="etiket" style="color:var(--main)">Anlamı</div><div style="font-weight:700;font-size:18px;margin-top:4px">'+esc(d.anlam)+'.</div></div>'));
+    k.appendChild(el('<div class="kutu k-altin" style="margin-top:10px"><div class="etiket" style="color:var(--gold)">Örnek cümle</div><div style="margin-top:4px">'+isaretle(d.ornek)+'</div></div>')) }
+  return k;
+}
+function kartlar(grup, adIle){
+  var l=grup?DEYIMLER.filter(function(d){return d.grup===grup}):DEYIMLER.slice();
+  var i=0, acik=false;
+  if(adIle){ i=Math.max(0,l.findIndex(function(d){return d.ad===adIle})); acik=true }
+  else { var y=l.findIndex(function(d){return kutu(d)===0}); if(y>=0) i=y }
+  function ciz(){
+    var d=l[i], k=kutu(d);
+    sayfa(grup||'Deyim kartı', grup?ogrenMenu:function(){liste('')});
+    var dz=k===0?['Yeni','var(--muted)']:(k>=OGRENILDI?['Öğrenildi ✓','var(--ok)']:['Öğreniliyor','var(--gold)']);
+    ekle('<div><div class="ust"><span class="soluk" style="font-weight:700">'+(i+1)+' / '+l.length+'</span><span style="color:'+dz[1]+'">'+dz[0]+'</span></div><div class="cubuk"><i style="background:var(--main);width:'+(100*(i+1)/l.length)+'%"></i></div></div>');
+    ekran.appendChild(kartGorunum(d, acik, function(){ acik=true; ciz() }));
+    if(acik){
+      var r=ekle('<div class="ikili"><button class="dugme d-altin">Tekrar göster</button><button class="dugme d-ok">Öğrendim ✓</button></div>');
+      r.children[0].onclick=function(){ tekrarEt(d); sonraki() };
+      r.children[1].onclick=function(){ ogrendim(d); sonraki() };
+      ekle('<p class="soluk ortala" style="margin:0">Öğrendiğin deyimler, unutmaman için birkaç gün arayla "Bugünkü tekrar"da tekrar sorulur.</p>');
+    }
+    var g=ekle('<div class="ikili" style="margin-top:8px"><button class="dugme d-soluk">‹ Önceki</button><button class="dugme d-soluk">Sonraki ›</button></div>');
+    if(i===0) g.children[0].style.opacity=.4;
+    g.children[0].onclick=function(){ if(i>0){ i--; acik=false; ciz() } };
+    g.children[1].onclick=sonraki;
+  }
+  function sonraki(){ if(i<l.length-1){ i++; acik=false; ciz() } else bitti() }
+  function bitti(){
+    sayfa(grup||'Deyim kartı', grup?ogrenMenu:ana);
+    var s=durum(l);
+    var k=ekle('<div class="kart ortala"><div class="buyuk">🎉 Bu konunun sonuna geldin!</div><p class="soluk">Çalışılan: '+(s[1]+s[2])+' / '+l.length+'<br>Şimdi bu konudan test çözerek kendini dene.</p><button class="dugme d-ana">Bu konudan test çöz</button><button class="dugme d-cerceve" style="margin-top:10px">Baştan göz at</button></div>');
+    var b=k.querySelectorAll('button'); b[0].onclick=function(){ testBasla(l,10,false,grup||'Karışık') }; b[1].onclick=function(){ i=0; acik=false; ciz() };
+  }
+  ciz();
+}
+
+// ---------- Tekrar ----------
+function tekrarBasla(){
+  var sira=karistir(tekrarListesi()), toplam=sira.length, bildi=0, bilemedi=0, acik=false;
+  function ciz(){
+    sayfa('Bugünkü tekrar', ana);
+    if(!sira.length){
+      var k=ekle('<div class="kart ortala"><div class="buyuk">'+(toplam?'🎉 Bugünkü tekrar bitti!':'Bugün tekrar edilecek deyim yok')+'</div><p class="soluk">'+(toplam?'Bildiğin: '+bildi+' · Bilemediğin (sonra bildiğin): '+bilemedi+'<br>Yarın yeni tekrarlar gelecek.':'"Öğren" bölümünden yeni deyimler öğrendikçe tekrarları burada çıkar.')+'</p><button class="dugme d-ana">Yeni deyim öğren</button></div>');
+      k.querySelector('button').onclick=ogrenMenu; return;
+    }
+    var d=sira[0];
+    ekle('<div><div class="ust"><span class="soluk" style="font-weight:700">Kalan: '+sira.length+'</span><span style="color:var(--main)">✓ '+bildi+'   ✗ '+bilemedi+'</span></div><div class="cubuk"><i style="width:'+(100*(toplam-sira.length)/Math.max(1,toplam))+'%"></i></div></div>');
+    ekle('<p class="soluk ortala" style="margin:0">'+(acik?'Doğru hatırladın mı? Dürüstçe işaretle.':'Önce anlamını içinden söyle, sonra kontrol et.')+'</p>');
+    ekran.appendChild(kartGorunum(d, acik, function(){ acik=true; ciz() }));
+    if(acik){
+      var r=ekle('<div class="ikili"><button class="dugme d-kirmizi">✗ Bilemedim</button><button class="dugme d-ok">✓ Bildim</button></div>');
+      r.children[0].onclick=function(){ cevap(d,false); bilemedi++; sira.push(sira.shift()); acik=false; ciz() };
+      r.children[1].onclick=function(){ cevap(d,true); bildi++; sira.shift(); acik=false; ciz() };
+    }
+  }
+  ciz();
+}
+
+// ---------- Sorular ----------
+function celdirici(d,n){
+  var ayni=[],diger=[];
+  DEYIMLER.forEach(function(o){ if(ayniAnlam(o,d)||o.anlam===d.anlam) return; (o.grup===d.grup?ayni:diger).push(o) });
+  karistir(ayni); karistir(diger);
+  var out=[]; function ek(o){ if(out.some(function(x){return ayniAnlam(x,o)||x.anlam===o.anlam})) return; out.push(o) }
+  ayni.slice(0,2).forEach(ek); diger.forEach(function(o){ if(out.length<n) ek(o) }); ayni.forEach(function(o){ if(out.length<n) ek(o) });
+  return out.slice(0,n);
+}
+function soruKur(s,dogru,yanlislar){ var l=karistir(yanlislar.concat([dogru])); s.secenek=l; s.dogru=l.indexOf(dogru); return s }
+function aciklamaDeyim(d){ return '<b>'+esc(buyukHarf(d.ad))+':</b> '+esc(d.anlam)+'.<br><i>'+isaretle(d.ornek)+'</i>' }
+function anlamNedir(d){ return soruKur({tip:'Deyimin anlamı',deyim:d,kok:'<i>“'+isaretle(d.ornek)+'”</i><br><br>Bu cümledeki altı çizili deyimin anlamı aşağıdakilerden hangisidir?',aciklama:aciklamaDeyim(d)}, esc(d.anlam), celdirici(d,3).map(function(o){return esc(o.anlam)})) }
+function hangiDeyim(d){ return soruKur({tip:'Anlamdan deyime',deyim:d,kok:'<b>“'+esc(d.anlam)+'”</b><br><br>anlamına gelen deyim aşağıdakilerden hangisidir?',aciklama:aciklamaDeyim(d)}, esc(buyukHarf(d.ad)), celdirici(d,3).map(function(o){return esc(buyukHarf(o.ad))})) }
+function boslukSoru(d){ return soruKur({tip:'Boşluk doldurma',deyim:d,kok:'<i>“'+bosluk(d.ornek)+'”</i><br><br>Bu cümledeki boşluğa anlamca hangi deyim getirilmelidir?',aciklama:aciklamaDeyim(d)}, esc(buyukHarf(d.ad)), celdirici(d,3).map(function(o){return esc(buyukHarf(o.ad))})) }
+function deyimYok(){
+  var h=karistir(DEYIMLER.slice()).slice(0,3), dz=esc(DUZ[Math.floor(Math.random()*DUZ.length)]);
+  return soruKur({tip:'Deyim bulma',deyim:null,kok:'Aşağıdaki cümlelerin hangisinde <b>deyim yoktur</b>?',aciklama:'Doğru cevapta deyim yok. Diğer cümlelerdeki deyimler:'+h.map(function(o){return '<br>• <b>'+esc(o.ad)+'</b>: '+esc(o.anlam)}).join('')}, dz, h.map(function(o){return duz(o.ornek)}));
+}
+function gercekAnlam(tercih){
+  if(!GERCEK.length) return null;
+  var sec=GERCEK.find(function(g){return g.deyim===tercih})||GERCEK[Math.floor(Math.random()*GERCEK.length)];
+  var h=[]; GERCEK.forEach(function(g){ if(g.deyim!==sec.deyim && h.indexOf(g.deyim)<0) h.push(g.deyim) });
+  karistir(h); h=h.slice(0,3);
+  function alti(c){ return esc(c).replace('[','<u><b>').replace(']','</b></u>') }
+  return soruKur({tip:'Gerçek anlam / deyim',deyim:null,kok:'Aşağıdaki cümlelerin hangisinde altı çizili söz <b>deyim olarak değil, gerçek anlamıyla</b> kullanılmıştır?',aciklama:'Doğru cevaptaki söz, kelimelerin kendi (gerçek) anlamıyla kullanılmış. Aynı söz deyim olunca anlamı değişir:<br>'+aciklamaDeyim(sec.deyim)}, alti(sec.cumle), h.map(function(o){return alti(o.ornek)}));
+}
+function soruUret(d,sadeceAnlam){
+  var r=Math.random()*100;
+  if(!sadeceAnlam){ if(r<10) return deyimYok(); if(r<20){ var g=gercekAnlam(d); if(g) return g } }
+  r=Math.random()*100; if(r<45) return anlamNedir(d); if(r<75) return hangiDeyim(d); return boslukSoru(d);
+}
+
+// ---------- Test ----------
+function testMenu(){
+  sayfa('Test çöz', ana);
+  ekle('<p class="soluk" style="margin:0">Sorular sınavlarda çıkan tiplerde: deyimin anlamı, anlamdan deyim bulma, boşluk doldurma, deyim içermeyen cümle ve gerçek anlam–deyim ayrımı.</p>');
+  secim('Karışık test · 10 soru','Tüm deyimlerden','var(--main)',function(){testBasla(DEYIMLER,10,false,'Karışık 10')});
+  secim('Karışık test · 20 soru','Deneme sınavı gibi','var(--main)',function(){testBasla(DEYIMLER,20,false,'Karışık 20')});
+  var cal=DEYIMLER.filter(function(d){return kutu(d)>0});
+  if(cal.length>=4) secim('Çalıştıklarımdan · 10 soru',cal.length+' deyim arasından','var(--ok)',function(){testBasla(cal,10,false,'Çalıştıklarım')});
+  var z=zayiflar(); if(z.length) secim('Yanlışlarımdan',z.length+' deyim','var(--bad)',yanlislardan);
+  ekle('<div class="etiket" style="margin-top:8px">Konuya göre · 10 soru</div>');
+  GRUPLAR.forEach(function(g){ var l=DEYIMLER.filter(function(d){return d.grup===g}); secim(grupAdi(g),l.length+' deyim','var(--blue)',function(){testBasla(l,10,false,g)}) });
+}
+function secim(ad,alt,renk,fn){ var b=ekle('<button class="bolum"><span class="serit" style="background:'+renk+'"></span><span><span class="ad">'+esc(ad)+'</span><br><span class="soluk">'+esc(alt)+'</span></span><span class="ok">›</span></button>'); b.onclick=fn }
+function yanlislardan(){
+  var z=zayiflar();
+  if(!z.length){ sayfa('Yanlışlarım', ana); ekle('<div class="kart ortala"><div class="buyuk">Henüz yanlış yaptığın deyim yok 👏</div><p class="soluk">Testlerde yanlış yaptığın deyimler burada toplanır. Doğru bildiğinde listeden çıkar.</p></div>'); return }
+  testBasla(z, Math.min(20,z.length), true, 'Yanlışlarım');
+}
+var saatId=null;
+function testBasla(havuz,n,sadeceAnlam,tur){
+  var hedef=karistir(havuz.slice()).slice(0,Math.min(n,havuz.length)), no=0, dogruSayi=0, yanlislar=[], bas=Date.now(), soru, secilen=-1, bitti=false;
+  function sure(sn){ return Math.floor(sn/60)+':'+('0'+(sn%60)).slice(-2) }
+  function cikis(){ if(bitti||confirm('Testten çıkılsın mı? Bu testteki ilerlemen kaydedilmez.')){ clearInterval(saatId); testMenu() } }
+  function yeni(){ soru=soruUret(hedef[no],sadeceAnlam); secilen=-1; ciz() }
+  function ciz(){
+    sayfa(tur, cikis);
+    ekle('<div><div class="ust"><span>Soru '+(no+1)+' / '+hedef.length+'</span><span class="soluk" id="saat">⏱ '+sure(Math.floor((Date.now()-bas)/1000))+'</span></div><div class="cubuk"><i style="background:var(--main);width:'+(100*(no+(secilen>=0?1:0))/hedef.length)+'%"></i></div></div>');
+    ekle('<div class="kart"><div class="etiket" style="color:var(--main)">'+esc(soru.tip)+'</div><div style="margin-top:8px">'+soru.kok+'</div></div>');
+    soru.secenek.forEach(function(s,j){
+      var cls=''; if(secilen>=0){ if(j===soru.dogru) cls=' dogru'; else if(j===secilen) cls=' yanlis' }
+      var b=ekle('<button class="secenek'+cls+'"><span class="h">'+'ABCD'[j]+'</span><span>'+s+'</span></button>');
+      if(secilen<0) b.onclick=function(){ sec(j) };
+    });
+    if(secilen>=0){
+      var ok=secilen===soru.dogru;
+      ekle('<div class="kutu '+(ok?'k-yesil':'k-altin')+'"><b style="color:'+(ok?'var(--ok)':'var(--bad)')+'">'+(ok?'✓ Doğru!':'✗ Yanlış. Doğru cevap: '+'ABCD'[soru.dogru])+'</b><div style="margin-top:6px;font-size:15px">'+soru.aciklama+'</div></div>');
+      var son=no===hedef.length-1, b=ekle('<button class="dugme d-ana">'+(son?'Sonucu gör':'Sonraki soru ›')+'</button>');
+      b.onclick=function(){ if(no<hedef.length-1){ no++; yeni() } else sonuc() };
+    }
+  }
+  function sec(j){ if(secilen>=0) return; secilen=j; var ok=j===soru.dogru; if(ok) dogruSayi++; else yanlislar.push(soru); if(soru.deyim) cevap(soru.deyim,ok); else calisildi(); ciz() }
+  function sonuc(){
+    bitti=true; clearInterval(saatId);
+    var sn=Math.floor((Date.now()-bas)/1000), n=hedef.length, y=Math.round(100*dogruSayi/n);
+    K.testler.push({t:Date.now(),tur:tur,s:n,d:dogruSayi,sn:sn}); if(K.testler.length>100) K.testler=K.testler.slice(-100); kaydet();
+    sayfa('Sonuç', testMenu);
+    var msj=y>=90?'🏆 Harika!':y>=70?'👏 Çok iyi!':y>=50?'🙂 Fena değil, biraz daha tekrar':'💪 Tekrar etmeye devam!';
+    ekle('<div class="kart ortala"><div class="buyuk">'+msj+'</div><div style="font-size:44px;font-weight:800;color:'+(y>=70?'var(--ok)':y>=50?'var(--gold)':'var(--bad)')+'">%'+y+'</div><div class="soluk" style="font-weight:700">Doğru '+dogruSayi+' · Yanlış '+(n-dogruSayi)+' · Süre '+sure(sn)+'</div></div>');
+    if(yanlislar.length){
+      ekle('<div class="etiket" style="color:var(--bad)">Yanlış yaptıkların</div>');
+      var tekrar=[]; yanlislar.forEach(function(s){ ekle('<div class="kart" style="font-size:15px">'+s.aciklama+'</div>'); if(s.deyim && tekrar.indexOf(s.deyim)<0) tekrar.push(s.deyim) });
+      if(tekrar.length){ var b=ekle('<button class="dugme d-bad">Yanlışları yeniden çöz</button>'); b.onclick=function(){ testBasla(tekrar,tekrar.length,true,'Yanlışları yeniden') } }
+    }
+    var y1=ekle('<button class="dugme d-ana">Yeni test</button>'); y1.onclick=testMenu;
+    var y2=ekle('<button class="dugme d-cerceve">Ana sayfa</button>'); y2.onclick=ana;
+  }
+  clearInterval(saatId);
+  saatId=setInterval(function(){ var s=document.getElementById('saat'); if(s&&!bitti) s.textContent='⏱ '+sure(Math.floor((Date.now()-bas)/1000)) },1000);
+  yeni();
+}
+
+// ---------- Liste ----------
+function liste(q){
+  sayfa('Deyim listesi', ana);
+  var ara=ekle('<input type="search" placeholder="Deyim ya da anlam ara…" autocomplete="off">'); ara.value=q;
+  var kap=ekle('<div style="display:flex;flex-direction:column;gap:6px"></div>');
+  function doldur(){
+    var s=ara.value.trim().toLocaleLowerCase(TR), grup=null, say=0; kap.innerHTML='';
+    DEYIMLER.forEach(function(d){
+      if(s && d.ad.toLocaleLowerCase(TR).indexOf(s)<0 && d.anlam.toLocaleLowerCase(TR).indexOf(s)<0) return;
+      if(d.grup!==grup){ grup=d.grup; kap.appendChild(el('<div class="etiket" style="color:var(--main);margin-top:10px">'+esc(grupAdi(grup))+'</div>')) }
+      var k=kutu(d), isr=k===0?'':(k>=OGRENILDI?'<b style="color:var(--ok)">✓</b>':'<b style="color:var(--gold)">•</b>');
+      var o=el('<div class="liste-ogesi satir"><div><b>'+esc(buyukHarf(d.ad))+'</b><br><span class="soluk">'+esc(d.anlam)+'</span></div>'+isr+'</div>');
+      o.onclick=function(){ kartlar(d.grup, d.ad) }; kap.appendChild(o); say++;
+    });
+    if(!say) kap.appendChild(el('<p class="soluk">Bulunamadı.</p>'));
+  }
+  ara.oninput=doldur; doldur();
+}
+
+// ---------- İlerleme ----------
+function ilerleme(){
+  sayfa('İlerleme', ana);
+  var h='<div class="etiket">Konulara göre öğrenilen</div><div class="kart">';
+  GRUPLAR.forEach(function(g,i){ var l=DEYIMLER.filter(function(d){return d.grup===g}), s=durum(l);
+    h+='<div class="satir" style="margin-top:'+(i?12:0)+'px"><b style="font-size:14px">'+esc(grupAdi(g))+'</b><b style="color:var(--ok);font-size:14px">'+s[2]+'/'+l.length+'</b></div><div class="cubuk"><i style="width:'+(100*s[2]/l.length)+'%"></i></div>' });
+  ekle('<div>'+h+'</div></div>');
+  var t=K.testler.slice(-15).reverse(), th='<div class="etiket">Son testler</div><div class="kart">';
+  if(!t.length) th+='<span class="soluk">Henüz test çözülmedi.</span>';
+  t.forEach(function(o,i){ var y=Math.round(100*o.d/Math.max(1,o.s)), tar=new Date(o.t).toLocaleString(TR,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    th+='<div class="satir" style="margin-top:'+(i?10:0)+'px"><div><b>'+esc(o.tur)+'</b><br><span class="soluk" style="font-size:12px">'+tar+' · '+o.d+'/'+o.s+' doğru · '+Math.floor(o.sn/60)+' dk '+(o.sn%60)+' sn</span></div><b style="font-size:18px;color:'+(y>=70?'var(--ok)':y>=50?'var(--gold)':'var(--bad)')+'">%'+y+'</b></div>' });
+  ekle('<div>'+th+'</div></div>');
+  var zor=DEYIMLER.filter(function(d){return kay(d).y>0}).sort(function(a,b){return kay(b).y-kay(a).y}).slice(0,10);
+  if(zor.length) ekle('<div><div class="etiket">En çok zorlandığın deyimler</div><div class="kart" style="font-size:14px">'+zor.map(function(d){return '<div style="margin-top:6px"><b>'+esc(d.ad)+'</b> — '+esc(d.anlam)+' <span style="color:var(--bad)">('+kay(d).y+' yanlış)</span></div>'}).join('')+'</div></div>');
+  var s=ekle('<button class="dugme d-kirmizi" style="margin-top:12px">İlerlemeyi sıfırla</button>');
+  s.onclick=function(){ if(confirm('İlerleme sıfırlansın mı? Öğrenilen deyimler, tekrarlar ve test geçmişi silinir. Bu geri alınamaz.')){ K={d:{},sonGun:0,seri:0,testler:[]}; kaydet(); ilerleme() } };
+}
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}) }
+ana();
+</script>
+</body>
+</html>
