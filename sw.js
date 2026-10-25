@@ -1,7 +1,7 @@
 // İnternet olmadan da açılsın diye dosyaları saklar. Her açılışta önce internetten yeni sürüm denenir,
 // böylece GitHub'a konan yeni sürüm kendiliğinden gelir. Yeni sürümde CACHE adını değiştir.
-var CACHE = "soru-takibi-2.15";
-var FILES = ["./", "index.html", "app.js", "cekirdek.js", "rapor.js", "veri.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
+var CACHE = "soru-takibi-2.17";
+var FILES = ["./", "index.html", "app.js", "cekirdek.js", "rapor.js", "veri.js", "mebkonu.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES.map(function (f) { return new Request(f, {cache: "reload"}); })); }));
   self.skipWaiting();

@@ -180,7 +180,7 @@ function resimGoster(file, bitti) {
 }
 
 // ================================================================== görünümler
-var views = ["main", "program", "ozet", "ayar"], aktif = "main";
+var views = ["main", "program", "ozet", "ayar", "plan", "okul"], aktif = "main";
 function go(v) {
   if (v === "program" && st.salt) { toast("Veli modunda program öğrencinin telefonundan değiştirilir."); return; }
   aktif = v;
@@ -190,6 +190,7 @@ function go(v) {
 }
 function yenidenCiz() {
   if (aktif === "main") loadDay(); else if (aktif === "program") selectPDay(pDow); else if (aktif === "ozet") renderOzet(); else if (aktif === "ayar") renderAyar();
+  else if (aktif === "plan") renderPlanSayfa(); else if (aktif === "okul") renderOkul();
 }
 document.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { go(b.getAttribute("data-go")); }); });
 
@@ -206,7 +207,7 @@ function loadDay() {
   if (salt) $("veliText").textContent = "Öğrencinin telefonundan son veri: " + zamanYazi(cihaz.sunucuZaman);
   $("addLesson").hidden = salt; $("clearDay").hidden = salt; $("kitap").disabled = salt;
   $("progBtn").hidden = salt;
-  renderUnsent(); renderTekrar(); renderWeek();
+  renderUnsent(); renderTekrar(); renderPlanKutu(); renderWeek();
   $("dateTitle").textContent = ST.tarihYazi(sel);
   $("goToday").hidden = selKey() === ST.key(ST.bugun());
   var dw = ST.dow(sel);
@@ -321,7 +322,8 @@ function card(k) {
     neden.style.color = n > k.yanlis ? "var(--bad)" : n === k.yanlis && k.yanlis > 0 ? "var(--ok)" : "var(--ink)";
   }
   update();
-  return el("div", {cls: "card lesson"}, [head, steps, neden]);
+  var ctl = k.ct && k.ct.length ? el("div", {cls: "ctl", text: "Çözdüğü testler: " + k.ct.map(function (c) { return (c.ka || "") + " · " + (c.k || "") + " · " + (c.t || "") + (c.q ? " (" + c.q + " soru)" : ""); }).join("; ")}) : null;
+  return el("div", {cls: "card lesson"}, [head, steps, neden, ctl]);
 }
 function longPress(btn, fn) {
   var t = null, fired = false;
@@ -945,6 +947,185 @@ function ogrenciKur() {
   });
 }
 
+// ================================================================== KOÇUN PLANI (Android 2.17 ile aynı veri)
+var SEBEPLER_PLAN = ["Okul ödevi çıktı", "Kurs / etkinlik uzadı", "Yorgundum / hastaydım", "Konu zor geldi", "Süre yetmedi", "Unuttum", "Diğer (yaz)"];
+function planCek(cb) {
+  if (!cihaz.adres || !cihaz.mod) { if (cb) cb(false); return; }
+  var u = cihaz.adres + (cihaz.adres.indexOf("?") >= 0 ? "&" : "?") + "tur=plan";
+  istek(u).then(function (r) {
+    var p = r && r.ok ? String(r.plan || "") : "";
+    if (p.trim().charAt(0) === "{") { JSON.parse(p); cihaz.kocPlan = p; cihaz.kocPlanZaman = Date.now(); cihazKaydet(); if (cb) cb(true); }
+    else if (cb) cb(false);
+    yenidenCiz();
+  }).catch(function () { if (cb) cb(false); });
+}
+function kocPlan() { try { return JSON.parse(cihaz.kocPlan || "null"); } catch (e) { return null; } }
+function jsonAyar(k) { try { return JSON.parse(st.metin(k, "{}")) || {}; } catch (e) { return {}; } }
+function planGunleri(p) { return p && p.gunler ? Object.keys(p.gunler).sort() : []; }
+function dersKisa(d) {
+  var k = String(d || "").toLocaleLowerCase("tr");
+  if (!k) return "Genel";
+  if (k.indexOf("fen") === 0) return "Fen"; if (k.indexOf("mat") === 0) return "Matematik"; if (k.indexOf("türk") === 0) return "Türkçe";
+  if (k.indexOf("sos") === 0) return "Sosyal"; if (k.indexOf("ing") === 0) return "İngilizce"; if (k.indexOf("din") === 0) return "Din";
+  if (k.indexOf("alm") === 0) return "Almanca"; return d;
+}
+var DERS_RENK = {"Fen": ["#1F7A3A", "#DDF2E1"], "Matematik": ["#2457B8", "#DDE8FB"], "Türkçe": ["#B23A3A", "#FBE0E0"], "Sosyal": ["#A65E10", "#FCEBD3"],
+  "İngilizce": ["#6B3FB8", "#ECE3FA"], "Din": ["#0F7C7C", "#D9F1F1"], "Almanca": ["#7A5A1F", "#F3EAD6"]};
+function dersRenk(d) { return DERS_RENK[dersKisa(d)] || ["#4F5B78", "#E8ECF4"]; }
+var TUR_AD = {odev: "🏫 Okul ödevi", yaz: "✍ Yazarak", tekrar: "↻ Tekrar", okuma: "📖 Okuma", test: "📝 Test"};
+function saatiGecti(tarih, dk) {
+  var b = ST.key(ST.bugun());
+  if (tarih < b) return true; if (tarih > b) return false;
+  var n = new Date(); return n.getHours() * 60 + n.getMinutes() >= dk;
+}
+function gorevler(p, tarih) {
+  var arr = p && p.gunler ? p.gunler[tarih] || [] : [], yap = jsonAyar("planYapildi")[tarih] || [], olm = jsonAyar("planYapilamadi")[tarih] || {};
+  return arr.map(function (o) {
+    var g = {id: o.id, ders: o.ders || "", tur: o.tur || "", saat: "", dk: 18 * 60}, m = String(o.metin || "");
+    var mt = /^\s*(\d{1,2})[:.](\d{2})\s*[·\-–]?\s*/.exec(m);
+    if (mt) { g.saat = ST.pad(+mt[1]) + ":" + mt[2]; g.dk = +mt[1] * 60 + +mt[2]; m = m.slice(mt[0].length); }
+    else if (/^öğleden sonra/i.test(m)) { g.saat = "Öğleden sonra"; g.dk = 13 * 60; m = m.replace(/^[^·]*·\s*/, ""); }
+    g.metin = m.trim().replace(/^OKUL ÖDEVİ:\s*/i, "");
+    g.yapildi = yap.indexOf(o.id) >= 0;
+    g.sebep = !g.yapildi && olm[o.id] ? (olm[o.id].s || "Diğer") : null;
+    g.gecti = saatiGecti(tarih, g.dk);
+    return g;
+  });
+}
+function siradaki(l) { for (var i = 0; i < l.length; i++) if (!l[i].yapildi && !l[i].sebep) return l[i]; return null; }
+function isaretle(tarih, id, v) {
+  var y = jsonAyar("planYapildi"), l = (y[tarih] || []).filter(function (x) { return x !== id; });
+  if (v) l.push(id); y[tarih] = l; st.setMetin("planYapildi", JSON.stringify(y));
+  if (v) yapilamadiYaz(tarih, id, null);
+}
+function yapilamadiYaz(tarih, id, sebep) {
+  var y = jsonAyar("planYapilamadi"), g = y[tarih] || {};
+  if (sebep === null) { if (!g[id]) return; delete g[id]; }
+  else { var n = new Date(); g[id] = {s: sebep, z: ST.key(n) + " " + ST.pad(n.getHours()) + ":" + ST.pad(n.getMinutes())}; }
+  if (Object.keys(g).length) y[tarih] = g; else delete y[tarih];
+  st.setMetin("planYapilamadi", JSON.stringify(y));
+}
+function ilerleme(top, bitti, olmadi) {
+  var b = el("div", {cls: "kbar"});
+  if (bitti) b.appendChild(el("i", {style: "flex:" + bitti + ";background:var(--ok)"}));
+  if (olmadi) b.appendChild(el("i", {style: "flex:" + olmadi + ";background:var(--bad)"}));
+  if (top - bitti - olmadi > 0) b.appendChild(el("i", {style: "flex:" + (top - bitti - olmadi)}));
+  return b;
+}
+var planSec = null;
+function renderPlanKutu() {
+  var box = $("planBox"); box.innerHTML = "";
+  var p = kocPlan(), t = selKey(), l = gorevler(p, t);
+  box.hidden = !l.length;
+  if (!l.length) return;
+  var bitti = 0, olmadi = 0, gecen = 0;
+  l.forEach(function (g) { if (g.yapildi) bitti++; else if (g.sebep) olmadi++; else if (g.gecti) gecen++; });
+  box.appendChild(el("div", {cls: "r"}, [el("b", {cls: "grow", style: "color:#2E6B2A;font-size:17px", text: "📋 Koçun planı"}), el("span", {cls: "kpill", text: bitti + "/" + l.length + " tamam"})]));
+  box.appendChild(ilerleme(l.length, bitti, olmadi));
+  var s = siradaki(l);
+  box.appendChild(el("div", {style: "margin-top:8px;font-size:14px", text: s ? ((s.gecti ? "Bekliyor: " : t === ST.key(ST.bugun()) ? "Sıradaki: " : "İlk görev: ") + (s.saat ? s.saat + " · " : "") + dersKisa(s.ders) + " · " + s.metin)
+    : (olmadi ? "Yapılamayanlar koça bildirildi." : "Günün planı tamam 🎉")}));
+  var u = []; if (gecen) u.push(gecen + " görevin saati geçti"); if (olmadi) u.push(olmadi + " görev yapılamadı");
+  if (u.length) box.appendChild(el("div", {style: "margin-top:4px;font-size:13px;font-weight:800;color:" + (gecen ? "var(--warn)" : "var(--bad)"), text: u.join(" · ")}));
+  box.appendChild(el("div", {style: "text-align:right;color:var(--blue);font-weight:800;font-size:14px;margin-top:6px", text: "Planı aç ›"}));
+}
+$("planBox").onclick = function () { planSec = selKey(); go("plan"); };
+function renderPlanSayfa() {
+  var p = kocPlan(), gl = planGunleri(p), tabs = $("planTabs"), box = $("planListe");
+  tabs.innerHTML = ""; box.innerHTML = "";
+  if (!gl.length) { box.appendChild(el("p", {cls: "muted", text: "Henüz koçtan plan gelmedi. İnternet açıkken \"Yenile\"ye bas."})); return; }
+  var bugun = ST.key(ST.bugun());
+  if (!planSec || gl.indexOf(planSec) < 0) planSec = gl.indexOf(bugun) >= 0 ? bugun : gl[0];
+  gl.forEach(function (g) {
+    var d = ST.parse(g), dw = ST.dow(d), l = gorevler(p, g), bitti = 0, olmadi = 0;
+    l.forEach(function (x) { if (x.yapildi) bitti++; else if (x.sebep) olmadi++; });
+    var b = el("button", {cls: "ktab" + (g === planSec ? " sel" : ""), onclick: function () { planSec = g; renderPlanSayfa(); window.scrollTo(0, 0); }}, [
+      el("b", {text: ST.GUNK[dw]}), el("span", {text: String(d.getDate())}),
+      el("i", {style: "color:" + (olmadi ? "var(--bad)" : bitti === l.length && l.length ? "var(--ok)" : "var(--muted)"), text: l.length ? (bitti === l.length ? "✓" : bitti + "/" + l.length) : "–"}),
+      g === bugun ? el("em", {text: "bugün"}) : null]);
+    b.style.setProperty("--c", ST.GUN_RENK[dw]); tabs.appendChild(b);
+  });
+  var d = ST.parse(planSec), l = gorevler(p, planSec), bitti = 0, olmadi = 0;
+  l.forEach(function (x) { if (x.yapildi) bitti++; else if (x.sebep) olmadi++; });
+  box.appendChild(el("h3", {style: "margin:8px 0 2px", text: ST.GUN[ST.dow(d)] + ", " + d.getDate() + " " + ST.AY[d.getMonth()]}));
+  box.appendChild(el("div", {cls: "muted small", text: l.length + " görev · " + bitti + " yapıldı" + (olmadi ? " · " + olmadi + " yapılamadı" : "") + (l.length - bitti - olmadi ? " · " + (l.length - bitti - olmadi) + " kaldı" : "")}));
+  box.appendChild(ilerleme(Math.max(1, l.length), bitti, olmadi));
+  var sira = siradaki(l), bugunMu = planSec === bugun;
+  l.forEach(function (g) {
+    var cls = g.yapildi ? " ok" : g.sebep ? " no" : g.gecti ? " late" : (bugunMu && g === sira ? " sira" : "");
+    var rk = dersRenk(g.ders), sag = el("div", {cls: "grow"}, [
+      el("div", {}, [el("span", {cls: "kchip", style: "color:" + rk[0] + ";background:" + rk[1], text: dersKisa(g.ders)}), el("span", {cls: "ktur", text: TUR_AD[g.tur] || ""})]),
+      el("div", {cls: "ktx", text: g.metin})]);
+    if (g.yapildi) sag.appendChild(durumSatir("✓ Yapıldı", "var(--ok)", function () { isaretle(planSec, g.id, false); renderPlanSayfa(); }));
+    else if (g.sebep) sag.appendChild(durumSatir("✗ Yapılamadı: " + g.sebep + " · koça bildirildi", "var(--bad)", function () { yapilamadiYaz(planSec, g.id, null); renderPlanSayfa(); }));
+    else if (!st.salt) {
+      var bb = el("div", {cls: "row mt8"}, [el("button", {cls: "btn okb", style: "width:auto;padding:8px 14px", text: "✓ Yaptım", onclick: function () { isaretle(planSec, g.id, true); renderPlanSayfa(); }})]);
+      if (g.gecti) bb.appendChild(el("button", {cls: "btn badb", style: "width:auto;padding:8px 14px;margin-left:8px", text: "Yapamadım", onclick: function () {
+        pick("Neden yapılamadı?", SEBEPLER_PLAN, function (i) {
+          if (i < SEBEPLER_PLAN.length - 1) { yapilamadiYaz(planSec, g.id, SEBEPLER_PLAN[i]); renderPlanSayfa(); return; }
+          askText("Sebep", "", function (v) { v = v.trim(); yapilamadiYaz(planSec, g.id, v ? "Diğer: " + v : "Diğer"); renderPlanSayfa(); }, {ipucu: "Kısaca yaz"});
+        });
+      }}));
+      sag.appendChild(bb);
+      if (g.gecti) sag.appendChild(el("div", {style: "color:var(--warn);font-size:12px;font-weight:800;margin-top:6px", text: "Saati geçti"}));
+    } else if (g.gecti) sag.appendChild(el("div", {style: "color:var(--warn);font-size:12px;font-weight:800;margin-top:6px", text: "Saati geçti, işaret yok"}));
+    box.appendChild(el("div", {cls: "kcard" + cls}, [el("div", {cls: "ksaat"}, [el("b", {text: g.saat || "–"}), bugunMu && g === sira && !g.gecti ? el("small", {text: "SIRADA"}) : null]), sag]));
+  });
+  if (p.not) box.appendChild(el("div", {cls: "knot"}, [el("b", {text: "KOÇUN NOTU"}), el("div", {text: p.not})]));
+  box.appendChild(el("p", {cls: "muted small mt12", text: st.salt ? "Veli görünümü: işaretleri öğrencinin telefonu gönderir. Plan son alındı: " + zamanYazi(cihaz.kocPlanZaman)
+    : "Yaptığın görevde \"Yaptım\"a bas. Saati geçmiş ama yapamadığın görevde \"Yapamadım\"a basıp sebebini seç; koç akşam planı düzenler."}));
+  box.appendChild(el("button", {cls: "btn soft mt12", text: "🏫 Okulda neredeyiz? (biten / işlenen konular) ›", onclick: function () { go("okul"); }}));
+}
+function durumSatir(yazi, renk, geri) {
+  return el("div", {cls: "r mt8"}, [el("b", {cls: "grow", style: "font-size:13px;color:" + renk, text: yazi}),
+    st.salt ? null : el("button", {cls: "link", style: "font-size:13px", text: "geri al", onclick: geri})]);
+}
+$("planYenile").onclick = function () { toast("Koçtan plan alınıyor…"); if (veli()) cek(true); planCek(function (ok) { toast(ok ? "Plan güncel" : "Plan alınamadı"); }); };
+
+// ================================================================== OKULDA NEREDEYİZ
+var OKUL_DERS = ["Matematik", "Türkçe", "Fen", "Sosyal", "İngilizce", "Din"], okulDers = "Matematik";
+function okulAnahtar(k) { return k[0] || k[1]; }
+function renderOkul() {
+  var v = jsonAyar("okulKonu"), tabs = $("okulTabs"), box = $("okulListe");
+  $("okulBilgi").textContent = st.salt ? "Öğrencinin işaretlediği konular. Son onay: " + (st.metin("okulKonuT", "") || "henüz yok")
+    : "Her derste okulda biten konulara \"✓ Bitti\", şu an işlenen konuya \"▶ Şimdi\" de. Konular MEB planının sırasıyla.";
+  tabs.innerHTML = "";
+  OKUL_DERS.forEach(function (d) {
+    var o = v[d] || {}, alt = "";
+    Object.keys(o).forEach(function (k) { if (o[k] && o[k].d === "s") alt = " ▶"; });
+    if (!alt && Object.keys(o).length) alt = " ✓";
+    var rk = dersRenk(d);
+    tabs.appendChild(el("button", {cls: "kchip big", style: "color:" + rk[0] + ";background:" + rk[1] + ";border-color:" + (d === okulDers ? rk[0] : "transparent"),
+      text: d + alt, onclick: function () { okulDers = d; renderOkul(); }}));
+  });
+  box.innerHTML = "";
+  var dv = v[okulDers] || {}, kl = MEB_KONU[okulDers] || [];
+  kl.forEach(function (k, i) {
+    var a = okulAnahtar(k), x = dv[a], d = x ? x.d : "";
+    var sol = el("div", {cls: "grow"}, [el("div", {style: "font-size:14px;" + (d ? "font-weight:800" : ""), text: k[1]}),
+      el("div", {cls: "muted", style: "font-size:11px", text: (k[0] ? k[0] + " · " : "") + "MEB planında " + k[2] + ". hafta" + (x && x.t ? " · " + (d === "b" ? "bitti " : "şu an · ") + x.t : "")})]);
+    var r = el("div", {cls: "okrow" + (d === "b" ? " b" : d === "s" ? " s" : "")}, [sol]);
+    if (!st.salt) {
+      r.appendChild(el("button", {cls: "oksec" + (d === "s" ? " on s" : ""), text: "▶ Şimdi", onclick: function () {
+        if (d === "s") return okulYaz(k, "");
+        okulYaz(k, "s");
+        var bos = []; for (var j = 0; j < i; j++) if (!dv[okulAnahtar(kl[j])]) bos.push(kl[j]);
+        if (bos.length) ask("Öncekiler bitti mi?", "Bu konudan önceki " + bos.length + " konu işaretsiz. Okulda bunların hepsi bitti mi?\n\nBiri atlandıysa \"Vazgeç\" de, sonra tek tek işaretle.", "Evet, hepsi bitti",
+          function () { bos.forEach(function (q) { okulYaz(q, "b"); }); });
+      }}));
+      r.appendChild(el("button", {cls: "oksec" + (d === "b" ? " on b" : ""), text: "✓ Bitti", onclick: function () { okulYaz(k, d === "b" ? "" : "b"); }}));
+    } else if (d) r.appendChild(el("b", {style: "font-size:13px;color:" + (d === "b" ? "var(--ok)" : "var(--blue)"), text: d === "b" ? "✓ Bitti" : "▶ Şimdi"}));
+    box.appendChild(r);
+  });
+  $("okulTamam").hidden = st.salt;
+}
+function okulYaz(k, durum) {
+  var v = jsonAyar("okulKonu"), dv = v[okulDers] || {}, a = okulAnahtar(k);
+  if (!durum) delete dv[a]; else dv[a] = {d: durum, t: ST.key(ST.bugun()), a: k[1]};
+  v[okulDers] = dv; st.setMetin("okulKonu", JSON.stringify(v)); renderOkul();
+}
+$("okulTamam").onclick = function () { st.setMetin("okulKonuT", ST.key(ST.bugun())); toast("Koça gönderildi, teşekkürler"); go("plan"); };
+
 // ================================================================== başlangıç
 yukle();
 yeniStore();
@@ -955,11 +1136,13 @@ $("tipClose").onclick = function () { cihaz.ipucuKapali = true; cihazKaydet(); $
 go("main");
 if (!cihaz.kurulum && !st.allKeys().length) ilkKurulum(); else if (!cihaz.kurulum) { cihaz.kurulum = true; cihazKaydet(); }
 if (veli()) cek(false); else if (ogrenci() && cihaz.bekliyor) gonder();
+planCek();
 document.addEventListener("visibilitychange", function () {
   if (document.hidden) { if (ogrenci() && cihaz.bekliyor) gonder(null, true); return; }
   if (aktif === "main" && selKey() !== ST.key(ST.bugun()) && !st.has(selKey())) sel = ST.bugun();
   yenidenCiz();
   if (veli()) cek(false); else if (ogrenci() && cihaz.bekliyor) gonder();
+  planCek();
 });
 setInterval(function () { if (!document.hidden && veli()) cek(false); }, 60000);
 if ("serviceWorker" in navigator) {

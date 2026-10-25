@@ -33,6 +33,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .row{display:flex;align-items:center;gap:8px}
 .col{display:flex;flex-direction:column}
 .grow{flex:1;min-width:0}
+.r{display:flex;align-items:center;gap:6px}
 .muted{color:var(--muted)}
 .small{font-size:13px}
 .lbl{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -139,6 +140,25 @@ input[type=text],input[type=number],input[type=time],input[type=url],textarea{wi
 .ayr{display:flex;align-items:center;gap:8px;padding:5px 0}
 .ayr input{width:76px;text-align:center;padding:8px}
 [hidden]{display:none!important}
+
+.kbox{display:block;width:100%;text-align:left;background:#F1F8EE;border:1.5px solid #9CCB8C;border-radius:14px;padding:12px 14px;margin-bottom:12px;color:var(--ink);font:inherit}
+.kpill{background:#DDF0D6;color:#2E6B2A;font-weight:800;font-size:13px;border-radius:10px;padding:3px 8px}
+.kbar{display:flex;height:8px;background:#E3E8F0;border-radius:4px;overflow:hidden;margin-top:8px}.kbar i{display:block}
+.ktabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
+.ktab{flex:none;width:56px;border:2px solid transparent;border-radius:12px;padding:6px 0;background:var(--c);display:flex;flex-direction:column;align-items:center;font:inherit;color:var(--ink)}
+.ktab.sel{border-color:var(--ink)}.ktab b{font-size:12px}.ktab span{font-size:18px;font-weight:800}.ktab i{font-style:normal;font-size:11px;font-weight:800}.ktab em{font-style:normal;font-size:10px;color:var(--blue);font-weight:800}
+.kcard{display:flex;gap:10px;border:1.5px solid var(--line);background:var(--paper);border-radius:14px;padding:12px;margin-top:10px}
+.kcard.ok{background:#EFF8F0;border-color:#A9D8B4}.kcard.no{background:#FDF0F0;border-color:#E7A3A3}.kcard.late{background:#FFF8EC;border-color:#F0C987}.kcard.sira{border-color:var(--blue)}
+.ksaat{width:56px;flex:none;text-align:center}.ksaat b{font-size:16px}.ksaat small{display:block;font-size:10px;color:var(--blue);font-weight:800;letter-spacing:.06em}
+.kchip{display:inline-block;font-size:12px;font-weight:800;border-radius:8px;padding:2px 8px;border:2px solid transparent}.kchip.big{font-size:14px;padding:7px 12px;border-radius:12px;flex:none;font-family:inherit}
+.ktur{font-size:12px;color:var(--muted);font-weight:800;margin-left:8px}
+.ktx{font-size:15px;font-weight:700;margin-top:6px}.kcard.ok .ktx{color:var(--muted);text-decoration:line-through;font-weight:400}.kcard.no .ktx{font-weight:400}
+.knot{background:#FFF7E0;border:1.5px solid #F0D58A;border-radius:12px;padding:10px 12px;margin-top:16px;font-size:14px}.knot b{display:block;color:var(--warn);font-size:11px;letter-spacing:.06em}
+.okrow{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--paper);border-radius:12px;padding:8px 8px 8px 12px;margin-top:8px}
+.okrow.b{background:#EFF8F0;border-color:#A9D8B4}.okrow.s{background:#EAF2FF;border-color:var(--blue)}
+.oksec{flex:none;border:1.5px solid var(--blue);color:var(--blue);background:transparent;border-radius:10px;padding:6px 8px;font-weight:800;font-size:12px;font-family:inherit}
+.oksec+.oksec{border-color:var(--ok);color:var(--ok)}.oksec.on.s{background:var(--blue);color:#fff}.oksec.on.b{background:var(--ok);color:#fff;border-color:var(--ok)}
+.ctl{font-size:12px;color:var(--muted);margin-top:8px}
 </style>
 </head>
 <body>
@@ -161,6 +181,7 @@ input[type=text],input[type=number],input[type=time],input[type=url],textarea{wi
   </div>
   <div class="box red unsent" id="unsent" hidden></div>
   <button class="box blue" id="tekrarBox" hidden style="display:block;width:100%;text-align:left"></button>
+  <button class="kbox" id="planBox" hidden></button>
   <div class="nav">
     <button class="arr" id="prevW" aria-label="Önceki hafta">‹</button>
     <div class="days" id="days"></div>
@@ -197,6 +218,24 @@ input[type=text],input[type=number],input[type=time],input[type=url],textarea{wi
   <div id="slots"></div>
   <button class="btn mt12" id="addSlot">+ Ders ekle</button>
   <button class="btn soft mt8" id="copyDay">Bu günü başka günlere kopyala</button>
+</div>
+
+<!-- KOÇUN PLANI -->
+<div class="wrap" id="v-plan" hidden>
+  <div class="row"><button class="link" data-go="main" style="font-size:18px">‹ Geri</button><span class="grow"></span><button class="link" id="planYenile">↻ Yenile</button></div>
+  <h2 style="margin:4px 0 8px">Koçun planı</h2>
+  <div class="ktabs" id="planTabs"></div>
+  <div id="planListe"></div>
+</div>
+
+<!-- OKULDA NEREDEYİZ -->
+<div class="wrap" id="v-okul" hidden>
+  <div class="row"><button class="link" data-go="plan" style="font-size:18px">‹ Geri</button></div>
+  <h2 style="margin:4px 0 6px">Okulda neredeyiz?</h2>
+  <p class="muted" id="okulBilgi" style="margin:0 0 10px;font-size:14px"></p>
+  <div class="ktabs" id="okulTabs"></div>
+  <div id="okulListe"></div>
+  <button class="btn fill mt12" id="okulTamam">Tamam, bu hafta güncel</button>
 </div>
 
 <!-- ÖZET -->
@@ -244,6 +283,7 @@ input[type=text],input[type=number],input[type=time],input[type=url],textarea{wi
 
 <div id="modalRoot"></div>
 <script src="veri.js"></script>
+<script src="mebkonu.js"></script>
 <script src="cekirdek.js"></script>
 <script src="rapor.js"></script>
 <script src="app.js"></script>

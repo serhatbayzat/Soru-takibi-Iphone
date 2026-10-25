@@ -41,10 +41,10 @@ function sebepNo(ad) { var i = SEBEPLER.indexOf(ad); return i < 0 ? 0 : i; }
 function sbp(ko) { return ko.length > 4 ? ko[4] : KONU_EKSIGI; }
 
 function Kayit() { this.ders = ""; this.saat = ""; this.soru = 0; this.dogru = 0; this.yanlis = 0; this.ek = false;
-  this.neden = NEDENLER.map(function () { return 0; }); this.konular = []; }
+  this.neden = NEDENLER.map(function () { return 0; }); this.konular = []; this.ct = []; }
 Kayit.prototype.isaretli = function () { var n = this.konular.length; this.neden.forEach(function (x) { n += x; }); return n; };
 Kayit.prototype.bos = function () { return Math.max(0, this.soru - this.dogru - this.yanlis); };
-Kayit.prototype.dolu = function () { return this.soru > 0 || this.dogru > 0 || this.yanlis > 0; };
+Kayit.prototype.dolu = function () { return this.soru > 0 || this.dogru > 0 || this.yanlis > 0 || this.ct.length > 0; };
 
 function sebepSay(k) {
   var c = SEBEPLER.map(function () { return 0; });
@@ -93,6 +93,7 @@ S.load = function (k) {
       (o.k || []).forEach(function (r) {
         var x = new Kayit();
         x.ders = r.d || ""; x.saat = r.s || ""; x.soru = r.q | 0; x.dogru = r.t | 0; x.yanlis = r.y | 0; x.ek = !!r.ek;
+        x.ct = Array.isArray(r.ct) ? r.ct : []; // Android 2.16+: çözülen testler {ka,k,t,q}
         var na = r.n || [];
         for (var j = 0; j < na.length && j < x.neden.length; j++) x.neden[j] = na[j] | 0;
         (r.ke || []).forEach(function (ko) {
@@ -136,6 +137,7 @@ S.save = function (g) {
   if (this.salt) return;
   var o = {kitap: g.kitap, sayfa: g.sayfa, gonderildi: g.gonderildi, atla: g.atla, k: g.kayitlar.map(function (x) {
     var r = {d: x.ders, s: x.saat, q: x.soru, t: x.dogru, y: x.yanlis, ek: x.ek};
+    if (x.ct && x.ct.length) r.ct = x.ct;
     if (x.isaretli() > 0) {
       r.n = x.neden.slice();
       r.ke = x.konular.map(function (ko) { return {k: ko[0], ka: ko[1], t: ko[2], s: ko[3], n: sbp(ko)}; });
@@ -149,7 +151,8 @@ S.allKeys = function () { return Object.keys(this.sp).filter(function (k) { retu
 
 function ekAnahtar(k) {
   return k === "tekrar" || k === "tekrarBas" || k.indexOf("esik_") === 0 || k.indexOf("hedef_") === 0
-    || k.indexOf("ekKonu_") === 0 || k.indexOf("hk_") === 0 || k === "kaynaklar" || k === "kitapEk" || k === "kitapGizli";
+    || k.indexOf("ekKonu_") === 0 || k.indexOf("hk_") === 0 || k === "kaynaklar" || k === "kitapEk" || k === "kitapGizli"
+    || k === "planYapildi" || k === "planYapilamadi" || k === "okulKonu" || k === "okulKonuT";
 }
 /** Android'deki Store.yedek() ile aynı biçim. */
 S.yedek = function () {
