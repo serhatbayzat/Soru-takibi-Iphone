@@ -1100,10 +1100,13 @@ function renderOkul() {
   });
   box.innerHTML = "";
   var dv = v[okulDers] || {}, kl = MEB_KONU[okulDers] || [];
+  var sonUnite = null;
   kl.forEach(function (k, i) {
     var a = okulAnahtar(k), x = dv[a], d = x ? x.d : "";
-    var sol = el("div", {cls: "grow"}, [el("div", {style: "font-size:14px;" + (d ? "font-weight:800" : ""), text: k[1]}),
-      el("div", {cls: "muted", style: "font-size:11px", text: (k[0] ? k[0] + " · " : "") + "MEB planında " + k[2] + ". hafta" + (x && x.t ? " · " + (d === "b" ? "bitti " : "şu an · ") + x.t : "")})]);
+    if (k[3] && k[3] !== sonUnite) box.appendChild(el("div", {style: "font-weight:800;font-size:13px;margin:" + (i ? "14px" : "2px") + " 0 0 2px;color:" + dersRenk(okulDers)[0], text: k[3]}));
+    sonUnite = k[3];
+    var sol = el("div", {cls: "grow"}, [el("div", {style: "font-size:16px;" + (d ? "font-weight:800" : ""), text: k[1]}),
+      el("div", {cls: "muted", style: "font-size:11px", text: "MEB planında " + k[2] + ". hafta" + (x && x.t ? " · " + (d === "b" ? "bitti " : "şu an · ") + x.t : "")})]);
     var r = el("div", {cls: "okrow" + (d === "b" ? " b" : d === "s" ? " s" : "")}, [sol]);
     if (!st.salt) {
       r.appendChild(el("button", {cls: "oksec" + (d === "s" ? " on s" : ""), text: "▶ Şimdi", onclick: function () {
