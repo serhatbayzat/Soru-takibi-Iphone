@@ -1099,25 +1099,25 @@ function renderOkul() {
       text: d + alt, onclick: function () { okulDers = d; renderOkul(); }}));
   });
   box.innerHTML = "";
-  var dv = v[okulDers] || {}, kl = MEB_KONU[okulDers] || [];
+  var dv = v[okulDers] || {}, kl = MEB_KONU[okulDers] || [], sarmal = okulDers === "Türkçe";
   var sonUnite = null;
   kl.forEach(function (k, i) {
     var a = okulAnahtar(k), x = dv[a], d = x ? x.d : "";
     if (k[3] && k[3] !== sonUnite) box.appendChild(el("div", {style: "font-weight:800;font-size:13px;margin:" + (i ? "14px" : "2px") + " 0 0 2px;color:" + dersRenk(okulDers)[0], text: k[3]}));
     sonUnite = k[3];
     var sol = el("div", {cls: "grow"}, [el("div", {style: "font-size:16px;" + (d ? "font-weight:800" : ""), text: k[1]}),
-      el("div", {cls: "muted", style: "font-size:11px", text: "MEB planında " + k[2] + ". hafta" + (x && x.t ? " · " + (d === "b" ? "bitti " : "şu an · ") + x.t : "")})]);
+      el("div", {cls: "muted", style: "font-size:11px", text: (k[2] ? "MEB planında " + k[2] + ". hafta" : "") + (x && x.t ? (k[2] ? " · " : "") + (d === "b" ? (sarmal ? "işlendi " : "bitti ") : "şu an · ") + x.t : "")})]);
     var r = el("div", {cls: "okrow" + (d === "b" ? " b" : d === "s" ? " s" : "")}, [sol]);
     if (!st.salt) {
       r.appendChild(el("button", {cls: "oksec" + (d === "s" ? " on s" : ""), text: "▶ Şimdi", onclick: function () {
         if (d === "s") return okulYaz(k, "");
         okulYaz(k, "s");
         var bos = []; for (var j = 0; j < i; j++) if (!dv[okulAnahtar(kl[j])]) bos.push(kl[j]);
-        if (bos.length) ask("Öncekiler bitti mi?", "Bu konudan önceki " + bos.length + " konu işaretsiz. Okulda bunların hepsi bitti mi?\n\nBiri atlandıysa \"Vazgeç\" de, sonra tek tek işaretle.", "Evet, hepsi bitti",
+        if (bos.length && !sarmal) ask("Öncekiler bitti mi?", "Bu konudan önceki " + bos.length + " konu işaretsiz. Okulda bunların hepsi bitti mi?\n\nBiri atlandıysa \"Vazgeç\" de, sonra tek tek işaretle.", "Evet, hepsi bitti",
           function () { bos.forEach(function (q) { okulYaz(q, "b"); }); });
       }}));
-      r.appendChild(el("button", {cls: "oksec" + (d === "b" ? " on b" : ""), text: "✓ Bitti", onclick: function () { okulYaz(k, d === "b" ? "" : "b"); }}));
-    } else if (d) r.appendChild(el("b", {style: "font-size:13px;color:" + (d === "b" ? "var(--ok)" : "var(--blue)"), text: d === "b" ? "✓ Bitti" : "▶ Şimdi"}));
+      r.appendChild(el("button", {cls: "oksec" + (d === "b" ? " on b" : ""), text: sarmal ? "✓ İşlendi" : "✓ Bitti", onclick: function () { okulYaz(k, d === "b" ? "" : "b"); }}));
+    } else if (d) r.appendChild(el("b", {style: "font-size:13px;color:" + (d === "b" ? "var(--ok)" : "var(--blue)"), text: d === "b" ? (sarmal ? "✓ İşlendi" : "✓ Bitti") : "▶ Şimdi"}));
     box.appendChild(r);
   });
   $("okulTamam").hidden = st.salt;
